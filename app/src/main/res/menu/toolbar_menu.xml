@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="清除配对"
+        android:id="@+id/item_clear"
+        android:icon="@mipmap/clear"
+        app:showAsAction="ifRoom|withText"/>
+
+    <item android:title="查找"
+        android:id="@+id/item_search"
+        android:icon="@mipmap/radar"
+        app:showAsAction="ifRoom|withText"/>
+</menu>
