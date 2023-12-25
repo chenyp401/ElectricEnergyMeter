@@ -46,5 +46,6 @@ public class BluetoothState {
     
     // Return Intent extra
     public static String EXTRA_DEVICE_ADDRESS = "device_address";
+    public static String EXTRA_DEVICE_NAME = "device_name";
     
 }

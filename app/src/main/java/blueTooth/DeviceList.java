@@ -231,10 +231,12 @@ public class DeviceList extends Activity {
                 // Get the device MAC address, which is the last 17 chars in the View
                 String info = ((TextView) v).getText().toString();
                 String address = info.substring(info.length() - 17);
+                String name = info.substring(0,info.length() - 17);
 
                 // Create the result Intent and include the MAC address
                 Intent intent = new Intent();
                 intent.putExtra(BluetoothState.EXTRA_DEVICE_ADDRESS, address);
+                intent.putExtra(BluetoothState.EXTRA_DEVICE_NAME, name);
 
                 // Set result and finish this Activity
                 setResult(Activity.RESULT_OK, intent);

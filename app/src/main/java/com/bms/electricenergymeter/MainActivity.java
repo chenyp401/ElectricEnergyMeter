@@ -1,10 +1,16 @@
 package com.bms.electricenergymeter;
 
+import static com.inuker.bluetooth.library.Code.REQUEST_SUCCESS;
+import static com.inuker.bluetooth.library.Constants.STATUS_CONNECTED;
+import static com.inuker.bluetooth.library.Constants.STATUS_DISCONNECTED;
+
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattService;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -27,14 +33,31 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 
+import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.primitives.Bytes;
+import com.inuker.bluetooth.library.BluetoothClient;
+import com.inuker.bluetooth.library.connect.listener.BleConnectStatusListener;
+import com.inuker.bluetooth.library.connect.options.BleConnectOptions;
+import com.inuker.bluetooth.library.connect.response.BleConnectResponse;
+import com.inuker.bluetooth.library.connect.response.BleNotifyResponse;
+import com.inuker.bluetooth.library.connect.response.BleWriteResponse;
+import com.inuker.bluetooth.library.model.BleGattCharacter;
+import com.inuker.bluetooth.library.model.BleGattDescriptor;
+import com.inuker.bluetooth.library.model.BleGattProfile;
+import com.inuker.bluetooth.library.model.BleGattService;
+
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.time.Duration;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import blueTooth.BluetoothSPP;
 import blueTooth.BluetoothState;
@@ -42,6 +65,22 @@ import blueTooth.CHexConver;
 import blueTooth.DeviceList;
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String UUID_Sever = "0000ffe0-0000-1000-8000-00805f9b34fb";
+    public static final String UUID_NOTIFY = "0000ffe1-0000-1000-8000-00805f9b34fb";
+    String address=null;
+    String name=  null;
+    BleGattService service= null;
+    BleGattCharacter charact=null;
+    BleNotifyResponse bleNotifyResponse;
+    BleConnectResponse bleConnectResponse;
+    BleWriteResponse bleWriteResponse;
+    BleConnectOptions options = new BleConnectOptions.Builder()
+            .setConnectRetry(3)   // 连接如果失败重试3次
+            .setConnectTimeout(20000)   // 连接超时30s
+            .setServiceDiscoverRetry(3)  // 发现服务如果失败重试3次
+            .setServiceDiscoverTimeout(20000)  // 发现服务超时20s
+            .build();
 
     //蓝牙对象
     BluetoothSPP bt;
@@ -118,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
     //确  定
     Button btnConfirm;
 
-
+    BluetoothClient mClient;
     Date baseTime;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(myToolbar);
         btStatus=(TextView)findViewById(R.id.tvStatus) ;
         btStatus.setText(getString(R.string.bluetooth_status)+"无");
+
 
 
         //电池控件
@@ -179,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
                      num %= 256;
                  }
                  buff[9]=(byte)(num^68) ;
-                 bt.send(buff,false);
+                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
              }
          });
         //背光设置
@@ -192,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
                  byte[] buff=new byte[]{(byte) 255,85,17, 2,33,0,0,0,0,0};
                  buff[8] = (byte)tm;
                  buff[9]=(byte)(buff[2]+buff[3]+buff[4]+buff[8]^68) ;
-                 bt.send(buff,false);
+                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
              }
          });
 
@@ -203,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
              public void onClick(View view) {
                  byte[] buff=new byte[]{(byte) 255,85,17, 2,1,0,0,0,0,0};
                  buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 bt.send(buff,false);
+                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff,bleWriteResponse);
              }
          });
         //电费清零
@@ -213,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
              public void onClick(View view) {
                  byte[] buff=new byte[]{(byte) 255,85,17, 2,1,0,0,0,0,0};
                  buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 bt.send(buff,false);
+                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff,bleWriteResponse);
              }
          });
         //二氧化碳清零
@@ -223,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
              public void onClick(View view) {
                  byte[] buff=new byte[]{(byte) 255,85,17, 2,1,0,0,0,0,0};
                  buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 bt.send(buff,false);
+                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
              }
          });
         //时间清零
@@ -241,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
              public void onClick(View view) {
                  byte[] buff=new byte[]{(byte) 255,85,17, 2,49,0,0,0,0,0};
                  buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 bt.send(buff,false);
+                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff,bleWriteResponse);
              }
          });
         //-
@@ -251,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
              public void onClick(View view) {
                  byte[] buff=new byte[]{(byte) 255,85,17, 2,52,0,0,0,0,0};
                  buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 bt.send(buff,false);
+                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
              }
          });
         //+
@@ -261,7 +301,7 @@ public class MainActivity extends AppCompatActivity {
              public void onClick(View view) {
                  byte[] buff=new byte[]{(byte) 255,85,17, 2,51,0,0,0,0,0};
                  buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 bt.send(buff,false);
+                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
              }
          });
         //确  定
@@ -271,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
              public void onClick(View view) {
                  byte[] buff=new byte[]{(byte) 255,85,17, 2,50,0,0,0,0,0};
                  buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 bt.send(buff,false);
+                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
              }
          });
 
@@ -309,145 +349,150 @@ public class MainActivity extends AppCompatActivity {
 
         baseTime=new Date(System.currentTimeMillis());
 
+        //////////////////////////spp蓝牙/////////////////////////////////////////////////////////////
         //actionBar = getSupportActionBar();
         //创建蓝牙对象
-        bt = new BluetoothSPP(this);
-        //Android版本检测，大于6.0要手动确认权限
-        if (Build.VERSION.SDK_INT >= 6.0) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    0);
-        }
-        //判断蓝牙状态
-        if(!bt.isBluetoothAvailable()) {
-            // any command for bluetooth is not available
-            Toast.makeText(this,"蓝牙不可用！",Toast.LENGTH_LONG).show();
-        }else{
-            Toast.makeText(this,"蓝牙可用！",Toast.LENGTH_LONG).show();
-        }
-        //设置蓝牙连接事件
-        bt.setBluetoothConnectionListener(new BluetoothSPP.BluetoothConnectionListener() {
-            public void onDeviceConnected(final String name, String address) {
-                //设置蓝牙连接状态
-                //((overviewFragment)over_view_frag).setConnectState(name);
-                Toast.makeText(getApplicationContext()
-                        , "Connected to " + name
-                        , Toast.LENGTH_SHORT).show();
-                btStatus.setText(getString(R.string.bluetooth_status)+name);
+//        bt = new BluetoothSPP(this);
+//        //Android版本检测，大于6.0要手动确认权限
+//        if (Build.VERSION.SDK_INT >= 6.0) {
+//            ActivityCompat.requestPermissions(this,
+//                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+//                    0);
+//        }
+//        //判断蓝牙状态
+//        if(!bt.isBluetoothAvailable()) {
+//            // any command for bluetooth is not available
+//            Toast.makeText(this,"蓝牙不可用！",Toast.LENGTH_LONG).show();
+//        }else{
+//            Toast.makeText(this,"蓝牙可用！",Toast.LENGTH_LONG).show();
+//        }
+//        //设置蓝牙连接事件
+//        bt.setBluetoothConnectionListener(new BluetoothSPP.BluetoothConnectionListener() {
+//            public void onDeviceConnected(final String name, String address) {
+//                //设置蓝牙连接状态
+//                //((overviewFragment)over_view_frag).setConnectState(name);
+//                Toast.makeText(getApplicationContext()
+//                        , "Connected to " + name
+//                        , Toast.LENGTH_SHORT).show();
+//                btStatus.setText(getString(R.string.bluetooth_status)+name);
+//
+//                //保存这次连接的蓝牙数据，以便下次打开APP自动连接
+//                SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
+//                SharedPreferences.Editor edit=sp.edit();
+//                edit.putString("address",address);
+////                edit.putString("name",name);
+//                edit.apply();
+//
+//            }
+//
+//            //蓝牙失去连接事件
+//            public void onDeviceDisconnected() {
+////                overviewFragment fOverview= (overviewFragment) fragManag.findFragmentByTag("overViewFrame");
+//                //设置蓝牙连接状态
+//                //((overviewFragment)over_view_frag).setConnectState("无");
+//                //弹出提示窗口
+//                Toast.makeText(getApplicationContext()
+//                        , "Connection lost"
+//                        , Toast.LENGTH_SHORT).show();
+//                btStatus.setText(getString(R.string.bluetooth_status) +"无");
+//                //停止更新界面定时器
+//                tm.cancel();
+//
+//            }
+//
+//            //蓝牙连接失败事件
+//            public void onDeviceConnectionFailed() {
+//                Toast.makeText(getApplicationContext()
+//                        , "连接失败！"
+//                        , Toast.LENGTH_SHORT).show();
+//                btStatus.setText(getString(R.string.bluetooth_status)+"无");
+//            }
+//        });
+//
+//        //蓝牙接收到数据事件
+//        bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() {
+//            double volMin=Double.parseDouble(etZeroVoltage.getText().toString());
+//            double volMax=Double.parseDouble(etFullVoltage.getText().toString());
+//            @Override
+//            public void onDataReceived(byte[] data, String message) {
+//
+//                //Toast.makeText(getApplicationContext(), CHexConver.byte2HexStr(data,data.length),Toast.LENGTH_LONG).show();
+//                DecimalFormat df = new DecimalFormat("0");
+//                DecimalFormat df1 = new DecimalFormat("0.0");
+//                DecimalFormat df2 = new DecimalFormat("0.00");
+//                DecimalFormat df3 = new DecimalFormat("0.000");
+//                if (data.length!=7)
+//                {
+//                    if (data.length==36 )
+//                    {
+//                        deviceTypep=data[3];
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                double voltage=(double)(Byte.toUnsignedInt(data[4]) * 256 * 256 + Byte.toUnsignedInt(data[5] )* 256 + Byte.toUnsignedInt(data[6])) / 10.0;
+//                                double current=(double)(Byte.toUnsignedInt(data[7]) * 256 * 256 + Byte.toUnsignedInt(data[8] )* 256 + Byte.toUnsignedInt(data[9])) / 1000.0;
+//                                double power=voltage*current;
+//                                double totalCapacity=(double)(Byte.toUnsignedInt(data[10]) * 256 * 256 + Byte.toUnsignedInt(data[11] )* 256 +Byte.toUnsignedInt(data[12])) / 100.0;
+//                                double totalWalt=(double)((Byte.toUnsignedInt(data[13]) * 256 * 256 * 256)) / 100.0 + (double)((Byte.toUnsignedInt(data[14] )* 256 * 256)) / 100.0 + (double)((Byte.toUnsignedInt(data[15] )* 256)) / 100.0 + (double)(Byte.toUnsignedInt(data[16])) / 100.0;
+//                                double co2=((double)((totalWalt * 0.997)));
+//                                double price=(double)(Byte.toUnsignedInt(data[17] )* 256 * 256 + Byte.toUnsignedInt(data[18] )* 256 + Byte.toUnsignedInt(data[19])) / 100.0;
+//                                double taotalMoney=totalWalt*price;
+//                                double tempIn=Byte.toUnsignedInt(data[24]) * 256 + Byte.toUnsignedInt(data[25]);
+//                                double backTime=data[30];
+//
+//                                tvVoltage.setText(df1.format(voltage));
+//                                tvCurrent.setText(df3.format(current));
+//                                tvPower.setText(df1.format(power));
+//                                tvCapacity.setText(df3.format(totalCapacity));
+//                                tvWalt.setText(df2.format(totalWalt));
+//                                tvCO2.setText(df2.format(co2));
+//                                tvPowerRate.setText(df2.format(taotalMoney));
+//                                tvTempIn.setText(df1.format(tempIn));
+//
+//                                if (!etPrice.hasFocus())
+//                                {
+//                                    etPrice.setText(df2.format(price));
+//                                }
+//                                if (!etBackTime.hasFocus())
+//                                {
+//                                    etBackTime.setText(df.format(backTime));
+//                                }
+//
+//                                if (!etZeroVoltage.hasFocus())
+//                                {
+//                                    volMin=Double.parseDouble(etZeroVoltage.getText().toString());
+//                                }
+//                                if (!etFullVoltage.hasFocus())
+//                                {
+//                                    volMax=Double.parseDouble(etFullVoltage.getText().toString());
+//                                }
+//                                double capacity=(voltage-volMin)/(volMax-volMin);
+//                                battery.setPower((int)(capacity*100));
+//                                tvCapacityPer.setText(df.format((int)(capacity*100)));
+//
+//                            }
+//                        });
+//                    }
+//
+//                }
+//
+//            }
+//        });
+//
+//        //蓝牙自动连接事件
+//        bt.setAutoConnectionListener(new BluetoothSPP.AutoConnectionListener() {
+//            public void onNewConnection(String name, String address) {
+//                Log.i("Check", "New Connection - " + name + " - " + address);
+//            }
+//
+//            public void onAutoConnectionStarted() {
+//                Log.i("Check", "Auto menu_connection started");
+//            }
+//        });
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                //保存这次连接的蓝牙数据，以便下次打开APP自动连接
-                SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
-                SharedPreferences.Editor edit=sp.edit();
-                edit.putString("address",address);
-//                edit.putString("name",name);
-                edit.apply();
+        mClient = new BluetoothClient(this);
 
-            }
-
-            //蓝牙失去连接事件
-            public void onDeviceDisconnected() {
-//                overviewFragment fOverview= (overviewFragment) fragManag.findFragmentByTag("overViewFrame");
-                //设置蓝牙连接状态
-                //((overviewFragment)over_view_frag).setConnectState("无");
-                //弹出提示窗口
-                Toast.makeText(getApplicationContext()
-                        , "Connection lost"
-                        , Toast.LENGTH_SHORT).show();
-                btStatus.setText(getString(R.string.bluetooth_status) +"无");
-                //停止更新界面定时器
-                tm.cancel();
-
-            }
-
-            //蓝牙连接失败事件
-            public void onDeviceConnectionFailed() {
-                Toast.makeText(getApplicationContext()
-                        , "连接失败！"
-                        , Toast.LENGTH_SHORT).show();
-                btStatus.setText(getString(R.string.bluetooth_status)+"无");
-            }
-        });
-
-        //蓝牙接收到数据事件
-        bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() {
-            double volMin=Double.parseDouble(etZeroVoltage.getText().toString());
-            double volMax=Double.parseDouble(etFullVoltage.getText().toString());
-            @Override
-            public void onDataReceived(byte[] data, String message) {
-
-                //Toast.makeText(getApplicationContext(), CHexConver.byte2HexStr(data,data.length),Toast.LENGTH_LONG).show();
-                DecimalFormat df = new DecimalFormat("0");
-                DecimalFormat df1 = new DecimalFormat("0.0");
-                DecimalFormat df2 = new DecimalFormat("0.00");
-                DecimalFormat df3 = new DecimalFormat("0.000");
-                if (data.length!=7)
-                {
-                    if (data.length==36 )
-                    {
-                        deviceTypep=data[3];
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                double voltage=(double)(Byte.toUnsignedInt(data[4]) * 256 * 256 + Byte.toUnsignedInt(data[5] )* 256 + Byte.toUnsignedInt(data[6])) / 10.0;
-                                double current=(double)(Byte.toUnsignedInt(data[7]) * 256 * 256 + Byte.toUnsignedInt(data[8] )* 256 + Byte.toUnsignedInt(data[9])) / 1000.0;
-                                double power=voltage*current;
-                                double totalCapacity=(double)(Byte.toUnsignedInt(data[10]) * 256 * 256 + Byte.toUnsignedInt(data[11] )* 256 +Byte.toUnsignedInt(data[12])) / 100.0;
-                                double totalWalt=(double)((Byte.toUnsignedInt(data[13]) * 256 * 256 * 256)) / 100.0 + (double)((Byte.toUnsignedInt(data[14] )* 256 * 256)) / 100.0 + (double)((Byte.toUnsignedInt(data[15] )* 256)) / 100.0 + (double)(Byte.toUnsignedInt(data[16])) / 100.0;
-                                double co2=((double)((totalWalt * 0.997)));
-                                double price=(double)(Byte.toUnsignedInt(data[17] )* 256 * 256 + Byte.toUnsignedInt(data[18] )* 256 + Byte.toUnsignedInt(data[19])) / 100.0;
-                                double taotalMoney=totalWalt*price;
-                                double tempIn=Byte.toUnsignedInt(data[24]) * 256 + Byte.toUnsignedInt(data[25]);
-                                double backTime=data[30];
-
-                                tvVoltage.setText(df1.format(voltage));
-                                tvCurrent.setText(df3.format(current));
-                                tvPower.setText(df1.format(power));
-                                tvCapacity.setText(df3.format(totalCapacity));
-                                tvWalt.setText(df2.format(totalWalt));
-                                tvCO2.setText(df2.format(co2));
-                                tvPowerRate.setText(df2.format(taotalMoney));
-                                tvTempIn.setText(df1.format(tempIn));
-
-                                if (!etPrice.hasFocus())
-                                {
-                                    etPrice.setText(df2.format(price));
-                                }
-                                if (!etBackTime.hasFocus())
-                                {
-                                    etBackTime.setText(df.format(backTime));
-                                }
-
-                                if (!etZeroVoltage.hasFocus())
-                                {
-                                    volMin=Double.parseDouble(etZeroVoltage.getText().toString());
-                                }
-                                if (!etFullVoltage.hasFocus())
-                                {
-                                    volMax=Double.parseDouble(etFullVoltage.getText().toString());
-                                }
-                                double capacity=(voltage-volMin)/(volMax-volMin);
-                                battery.setPower((int)(capacity*100));
-                                tvCapacityPer.setText(df.format((int)(capacity*100)));
-
-                            }
-                        });
-                    }
-
-                }
-
-            }
-        });
-
-        //蓝牙自动连接事件
-        bt.setAutoConnectionListener(new BluetoothSPP.AutoConnectionListener() {
-            public void onNewConnection(String name, String address) {
-                Log.i("Check", "New Connection - " + name + " - " + address);
-            }
-
-            public void onAutoConnectionStarted() {
-                Log.i("Check", "Auto menu_connection started");
-            }
-        });
 
         tm=new Timer();
         tm.schedule(new TimerTask() {
@@ -456,7 +501,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (bt.getServiceState()==BluetoothState.STATE_CONNECTED)
+//                        if (bt.getServiceState()==BluetoothState.STATE_CONNECTED)
                         {
                             Date now = new Date(System.currentTimeMillis());
                             // 计算时间差（毫秒）
@@ -566,15 +611,19 @@ public class MainActivity extends AppCompatActivity {
                 new Thread() {
                     @Override
                     public void run() {
-                        bt.connect(data);
+//                        bt.connect(data);
+
+                        address=  data.getStringExtra(BluetoothState.EXTRA_DEVICE_ADDRESS);
+                        name=  data.getStringExtra(BluetoothState.EXTRA_DEVICE_NAME);
+                        mClient.connect(address,options, bleConnectResponse);
                         super.run();
                     }
                 }.start();
 
         } else if (requestCode == BluetoothState.REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) {
-                bt.setupService();
-                bt.startService(BluetoothState.DEVICE_ANDROID);
+//                bt.setupService();
+//                bt.startService(BluetoothState.DEVICE_ANDROID);
 //                setup();
             } else {
                 // Do something if user doesn't choose any device (Pressed back)
@@ -632,25 +681,213 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+//        //使能蓝牙
+//        if(!bt.isBluetoothEnabled()) {
+//            bt.enable();
+//        } else {
+//            //开启蓝牙服务
+//            if(!bt.isServiceAvailable()) {
+//                bt.setupService();
+//                bt.startService(BluetoothState.DEVICE_OTHER);
+//                //读取上次连接蓝牙数据
+//                SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
+//                String addr=sp.getString("address","");
+////                String name=sp.getString("name","");
+//                //连接上次连接的蓝牙设备
+//                if (!addr.equals("")){
+//                    bt.connect(addr);
+//                }
+//            }
+//        }
+
         //使能蓝牙
-        if(!bt.isBluetoothEnabled()) {
-            bt.enable();
-        } else {
-            //开启蓝牙服务
-            if(!bt.isServiceAvailable()) {
-                bt.setupService();
-                bt.startService(BluetoothState.DEVICE_OTHER);
+        if(!mClient.isBluetoothOpened()) {
+            mClient.openBluetooth();
+        }
+        else
+        {
                 //读取上次连接蓝牙数据
                 SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
-                String addr=sp.getString("address","");
-//                String name=sp.getString("name","");
+                address=sp.getString("address","");
+                name=sp.getString("name","");
+
+            //蓝牙接收数据回调
+            bleNotifyResponse=new BleNotifyResponse()
+            {
+                ArrayList<Byte> lst=new ArrayList<Byte>() ;
+                @Override
+                public void onNotify(UUID service, UUID character, byte[] vals)
+                {
+                    Toast.makeText(getApplicationContext(), CHexConver.byte2HexStr(vals,vals.length),Toast.LENGTH_LONG).show();
+                    DecimalFormat df = new DecimalFormat("0");
+                    DecimalFormat df1 = new DecimalFormat("0.0");
+                    DecimalFormat df2 = new DecimalFormat("0.00");
+                    DecimalFormat df3 = new DecimalFormat("0.000");
+                    for (int i = 0; i < vals.length; i++) {
+                        lst.add(vals[i]);
+                    }
+                    if (lst.size()!=7)
+                    {
+                        if (lst.size()>=36 && lst.get(0)==-1)
+                        {
+                            byte[] data=Bytes.toArray (lst);
+                            deviceTypep=data[3];
+                            runOnUiThread(new Runnable()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    double volMin=Double.parseDouble(etZeroVoltage.getText().toString());
+                                    double volMax=Double.parseDouble(etFullVoltage.getText().toString());
+                                    double voltage=(double)(Byte.toUnsignedInt(data[4]) * 256 * 256 + Byte.toUnsignedInt(data[5] )* 256 + Byte.toUnsignedInt(data[6])) / 10.0;
+                                    double current=(double)(Byte.toUnsignedInt(data[7]) * 256 * 256 + Byte.toUnsignedInt(data[8] )* 256 + Byte.toUnsignedInt(data[9])) / 1000.0;
+                                    double power=voltage*current;
+                                    double totalCapacity=(double)(Byte.toUnsignedInt(data[10]) * 256 * 256 + Byte.toUnsignedInt(data[11] )* 256 +Byte.toUnsignedInt(data[12])) / 100.0;
+                                    double totalWalt=(double)((Byte.toUnsignedInt(data[13]) * 256 * 256 * 256)) / 100.0 + (double)((Byte.toUnsignedInt(data[14] )* 256 * 256)) / 100.0 + (double)((Byte.toUnsignedInt(data[15] )* 256)) / 100.0 + (double)(Byte.toUnsignedInt(data[16])) / 100.0;
+                                    double co2=((double)((totalWalt * 0.997)));
+                                    double price=(double)(Byte.toUnsignedInt(data[17] )* 256 * 256 + Byte.toUnsignedInt(data[18] )* 256 + Byte.toUnsignedInt(data[19])) / 100.0;
+                                    double taotalMoney=totalWalt*price;
+                                    double tempIn=Byte.toUnsignedInt(data[24]) * 256 + Byte.toUnsignedInt(data[25]);
+                                    double backTime=data[30];
+
+                                    tvVoltage.setText(df1.format(voltage));
+                                    tvCurrent.setText(df3.format(current));
+                                    tvPower.setText(df1.format(power));
+                                    tvCapacity.setText(df3.format(totalCapacity));
+                                    tvWalt.setText(df2.format(totalWalt));
+                                    tvCO2.setText(df2.format(co2));
+                                    tvPowerRate.setText(df2.format(taotalMoney));
+                                    tvTempIn.setText(df1.format(tempIn));
+
+                                    if (!etPrice.hasFocus())
+                                    {
+                                        etPrice.setText(df2.format(price));
+                                    }
+                                    if (!etBackTime.hasFocus())
+                                    {
+                                        etBackTime.setText(df.format(backTime));
+                                    }
+
+                                    if (!etZeroVoltage.hasFocus())
+                                    {
+                                        volMin=Double.parseDouble(etZeroVoltage.getText().toString());
+                                    }
+                                    if (!etFullVoltage.hasFocus())
+                                    {
+                                        volMax=Double.parseDouble(etFullVoltage.getText().toString());
+                                    }
+                                    double capacity=(voltage-volMin)/(volMax-volMin);
+                                    battery.setPower((int)(capacity*100));
+                                    tvCapacityPer.setText(df.format((int)(capacity*100)));
+
+                                }
+                            });
+                            lst.clear();
+                        }
+                        else
+                        {
+                            if(lst.get(0)!=-1) lst.clear();
+                        }
+                    }
+                }
+
+
+                @Override
+                public void onResponse(int code)
+                {
+
+                }
+            };
+            //蓝牙连接事件
+            bleConnectResponse=new BleConnectResponse() {
+                @Override
+                public void onResponse(int code, BleGattProfile profile) {
+                    if (code == REQUEST_SUCCESS) {
+                        Toast.makeText(getApplicationContext()
+                                , "Connected to " + name
+                                , Toast.LENGTH_SHORT).show();
+                        btStatus.setText(getString(R.string.bluetooth_status)+name);
+
+                        service= profile.getService(UUID.fromString(UUID_Sever));
+                        charact=null;
+                        if (service!=null)
+                        {
+                            List<BleGattCharacter> characteristics = service.getCharacters(); // 获取特征
+                            for (BleGattCharacter character:characteristics)
+                            {
+                                if (character.getUuid().toString().equals(UUID_NOTIFY) )
+                                {
+                                    charact=character;
+                                    break;
+                                }
+                            }
+                            if (charact==null) return;
+                            mClient.notify(address, service.getUUID(), charact.getUuid(), bleNotifyResponse);
+                        }
+                        else
+                        {
+                            return;
+                        }
+                        mClient.registerConnectStatusListener(address, mBleConnectStatusListener);
+
+                        //保存这次连接的蓝牙数据，以便下次打开APP自动连接
+                        SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
+                        SharedPreferences.Editor edit=sp.edit();
+                        edit.putString("address",address);
+                        edit.putString("name",name);
+                        edit.apply();
+                    }
+                }
+            };
+
+            //写蓝牙结果回调
+            bleWriteResponse=new BleWriteResponse() {
+                @Override
+                public void onResponse(int code) {
+                    if (code != REQUEST_SUCCESS) {
+                        Toast.makeText(getApplicationContext()
+                                , "写入错误！"
+                                , Toast.LENGTH_SHORT).show();
+                    }
+                }
+            };
+
                 //连接上次连接的蓝牙设备
-                if (!addr.equals("")){
-                    bt.connect(addr);
+                if (!address.equals("")){
+                    mClient.connect(address,options, bleConnectResponse);
                 }
             }
-        }
         super.onStart();
+    }
+
+    //蓝牙状态改变回调事件
+    private final BleConnectStatusListener mBleConnectStatusListener = new BleConnectStatusListener() {
+
+        @Override
+        public void onConnectStatusChanged(String mac, int status) {
+            if (status == STATUS_CONNECTED) {
+
+
+            } else if (status == STATUS_DISCONNECTED) {
+
+                Toast.makeText(getApplicationContext()
+                        , "连接断开！"
+                        , Toast.LENGTH_SHORT).show();
+                btStatus.setText(getString(R.string.bluetooth_status) +"无");
+                mClient.connect(mac,options,bleConnectResponse);
+//                mClient.unregisterConnectStatusListener(mac, mBleConnectStatusListener);
+            }
+        }
+    };
+
+    //判断蓝牙是否可用
+    private  boolean iSBleEnable()
+    {
+        if (address==null || address.equals("")) return false;
+        if (service==null) return false;
+        if (charact==null) return false;
+//        if (mClient==null || mClient.isBluetoothOpened()) return false;
+        return true;
     }
 
     //界面生命周期事件
