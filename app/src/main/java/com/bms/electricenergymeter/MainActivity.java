@@ -130,6 +130,11 @@ public class MainActivity extends AppCompatActivity {
     //满容量电压
     EditText etFullVoltage;
 
+    //满容量容量
+    EditText etFullCapacity;
+    //满容量容量设置
+    Button btnFullCapacitySet;
+
     //0容量电压设置
     Button btnPrice;
     //背光设置设置
@@ -159,6 +164,10 @@ public class MainActivity extends AppCompatActivity {
 
     BluetoothClient mClient;
     Date baseTime;
+
+    float minVoltage=2;
+    float maxVoltage=5;
+    float fullCapacity=100;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -321,11 +330,22 @@ public class MainActivity extends AppCompatActivity {
         btnZeroVoltage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (Float.parseFloat(etZeroVoltage.getText().toString())<=0)
+                {
+                    Toast.makeText(getApplicationContext(),"零容电压要大于0！",Toast.LENGTH_LONG).show();
+                    return;
+                }
+                if (Float.parseFloat(etFullVoltage.getText().toString())<=Float.parseFloat(etZeroVoltage.getText().toString()))
+                {
+                    Toast.makeText(getApplicationContext(),"满容电压要大于零容电压！",Toast.LENGTH_LONG).show();
+                    return;
+                }
                 //保存0容量电压
                 SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
                 SharedPreferences.Editor edit=sp.edit();
                 edit.putString("zeroCapacityVoltage",etZeroVoltage.getText().toString());
                 edit.apply();
+                minVoltage=Float.parseFloat(etZeroVoltage.getText().toString());
             }
         });
 
@@ -333,19 +353,57 @@ public class MainActivity extends AppCompatActivity {
       btnFullVoltage.setOnClickListener(new View.OnClickListener() {
           @Override
           public void onClick(View view) {
+
+              if (Float.parseFloat(etFullVoltage.getText().toString())<=0)
+              {
+                  Toast.makeText(getApplicationContext(),"满容电压要大于0！",Toast.LENGTH_LONG).show();
+                  return;
+              }
+              if (Float.parseFloat(etFullVoltage.getText().toString())<=Float.parseFloat(etZeroVoltage.getText().toString()))
+              {
+                  Toast.makeText(getApplicationContext(),"满容电压要大于零容电压！",Toast.LENGTH_LONG).show();
+                  return;
+              }
               //保存满容量电压
               SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
               SharedPreferences.Editor edit=sp.edit();
               edit.putString("fullCapacityVoltage",etFullVoltage.getText().toString());
               edit.apply();
+              maxVoltage=Float.parseFloat(etFullVoltage.getText().toString());
           }
       });
+
+        etFullCapacity=(EditText) findViewById(R.id.etFullCapacity);
+        btnFullCapacitySet=(Button)findViewById(R.id.btnFullCapacitySet);
+        btnFullCapacitySet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (Float.parseFloat(etFullCapacity.getText().toString())<=0)
+                {
+                    Toast.makeText(getApplicationContext(),"满容容量要大于0！",Toast.LENGTH_LONG).show();
+                    return;
+                }
+                //保存满容量容量
+                SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
+                SharedPreferences.Editor edit=sp.edit();
+                edit.putString("fullCapacity",etFullCapacity.getText().toString());
+                edit.apply();
+                fullCapacity=Float.parseFloat(etFullCapacity.getText().toString());
+            }
+        });
 
         SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
         String strZero=sp.getString("zeroCapacityVoltage","2");
         String strFull=sp.getString("fullCapacityVoltage","5");
-       etZeroVoltage.setText(strZero);
+        String strFullCapacity=sp.getString("fullCapacity","5");
+
+        minVoltage=Float.parseFloat(strZero);
+        maxVoltage=Float.parseFloat(strFull);
+        fullCapacity=Float.parseFloat(strFullCapacity);
+
+        etZeroVoltage.setText(strZero);
         etFullVoltage.setText(strFull);
+        etFullCapacity.setText(strFullCapacity);
 
         baseTime=new Date(System.currentTimeMillis());
 
@@ -516,6 +574,7 @@ public class MainActivity extends AppCompatActivity {
                             long seconds = diff / 1000;
                             DecimalFormat df = new DecimalFormat("00");
                             tvRunTime.setText(df.format(hours- days * 24)+":"+df.format(minutes- hours * 60)+":"+df.format(seconds - minutes * 60));
+
                         }
 
                     }
@@ -718,7 +777,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onNotify(UUID service, UUID character, byte[] vals)
                 {
-                    Toast.makeText(getApplicationContext(), CHexConver.byte2HexStr(vals,vals.length),Toast.LENGTH_LONG).show();
+//                    Toast.makeText(getApplicationContext(), CHexConver.byte2HexStr(vals,vals.length),Toast.LENGTH_LONG).show();
                     DecimalFormat df = new DecimalFormat("0");
                     DecimalFormat df1 = new DecimalFormat("0.0");
                     DecimalFormat df2 = new DecimalFormat("0.00");
@@ -737,8 +796,8 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void run()
                                 {
-                                    double volMin=Double.parseDouble(etZeroVoltage.getText().toString());
-                                    double volMax=Double.parseDouble(etFullVoltage.getText().toString());
+//                                    double volMin=Double.parseDouble(etZeroVoltage.getText().toString());
+//                                    double volMax=Double.parseDouble(etFullVoltage.getText().toString());
                                     double voltage=(double)(Byte.toUnsignedInt(data[4]) * 256 * 256 + Byte.toUnsignedInt(data[5] )* 256 + Byte.toUnsignedInt(data[6])) / 10.0;
                                     double current=(double)(Byte.toUnsignedInt(data[7]) * 256 * 256 + Byte.toUnsignedInt(data[8] )* 256 + Byte.toUnsignedInt(data[9])) / 1000.0;
                                     double power=voltage*current;
@@ -768,17 +827,33 @@ public class MainActivity extends AppCompatActivity {
                                         etBackTime.setText(df.format(backTime));
                                     }
 
-                                    if (!etZeroVoltage.hasFocus())
+//                                    if (!etZeroVoltage.hasFocus())
+//                                    {
+//                                        volMin=Double.parseDouble(etZeroVoltage.getText().toString());
+//                                    }
+//                                    if (!etFullVoltage.hasFocus())
+//                                    {
+//                                        volMax=Double.parseDouble(etFullVoltage.getText().toString());
+//                                    }
+
+                                    if (name.contains("SPP") || name.contains("spp") )
                                     {
-                                        volMin=Double.parseDouble(etZeroVoltage.getText().toString());
+                                        if (maxVoltage-minVoltage>0)
+                                        {
+                                            double capacity=(voltage-minVoltage)/(maxVoltage-minVoltage);
+                                            battery.setPower((int)(capacity*100));
+                                            tvCapacityPer.setText(df.format((int)(capacity*100)));
+                                        }
                                     }
-                                    if (!etFullVoltage.hasFocus())
+                                    if (name.contains("BLE") || name.contains("ble") )
                                     {
-                                        volMax=Double.parseDouble(etFullVoltage.getText().toString());
+                                        if (fullCapacity>0)
+                                        {
+                                            double capacity=totalCapacity/fullCapacity;
+                                            battery.setPower((int)(capacity*100));
+                                            tvCapacityPer.setText(df.format((int)(capacity*100)));
+                                        }
                                     }
-                                    double capacity=(voltage-volMin)/(volMax-volMin);
-                                    battery.setPower((int)(capacity*100));
-                                    tvCapacityPer.setText(df.format((int)(capacity*100)));
 
                                 }
                             });
@@ -854,7 +929,7 @@ public class MainActivity extends AppCompatActivity {
 
                 //连接上次连接的蓝牙设备
                 if (!address.equals("")){
-                    mClient.connect(address,options, bleConnectResponse);
+                    mClient.connect(address, bleConnectResponse);
                 }
             }
         super.onStart();

@@ -150,88 +150,180 @@
                     />
                 </TableRow>
 
-<!--                <Button android:text="电量清零"-->
-<!--                    android:background="@drawable/border_background"-->
-<!--                    android:layout_height="35dp"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_gravity="center"-->
-<!--                    android:gravity="center"-->
-<!--                    android:padding="2dp"/>-->
             </TableLayout>
 
         </LinearLayout>
 
         <LinearLayout android:paddingTop="10dp"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
+            android:layout_height="210dp"
             android:layout_marginTop="-2dp"
             android:orientation="horizontal"
             android:background="@drawable/border_background">
 
             <LinearLayout android:layout_marginLeft="5dp"
-                android:layout_width="1dp"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
                 android:orientation="vertical">
-                <LinearLayout
+                <LinearLayout android:orientation="horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-                    <TextView android:text="电价 (元):"
+                    android:layout_height="wrap_content">
+                    <LinearLayout
+                        android:layout_width="1dp"
                         android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"/>
-                    <EditText
-                        android:id="@+id/etPrice"
-                        android:inputType="numberDecimal"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/border_background"
-                        android:text="0.52"
-                        android:layout_gravity="center"
-                        android:padding="2dp"
-                        android:singleLine="true"
-                        android:layout_width="70dp"/>
-                    <Button android:text="设置"
-                        android:id="@+id/btnPrice"
-                        android:background="@drawable/button_color"
-                        android:layout_height="30dp"
-                        android:layout_width="40dp"
-                        android:padding="0dp"
-                        android:textSize="14dp"
-                        />
+                        android:layout_weight="1"
+                        android:orientation="horizontal">
+                        <TextView android:text="电价 (元):"
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"/>
+                        <EditText
+                            android:id="@+id/etPrice"
+                            android:inputType="numberDecimal"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/border_background"
+                            android:text="0.52"
+                            android:layout_gravity="center"
+                            android:padding="2dp"
+                            android:singleLine="true"
+                            android:layout_width="60dp"/>
+                        <Button android:text="设置"
+                            android:id="@+id/btnPrice"
+                            android:background="@drawable/button_color"
+                            android:layout_height="30dp"
+                            android:layout_width="40dp"
+                            android:padding="0dp"
+                            android:textSize="14dp"
+                            />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="1dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content">
+
+                        <TextView android:text="背 光 (S) :"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/etBackTime"
+                            android:inputType="number"
+                            android:background="@drawable/border_background"
+                            android:layout_height="wrap_content"
+                            android:text="50"
+                            android:layout_gravity="center"
+                            android:padding="2dp"
+                            android:singleLine="true"
+                            android:layout_width="60dp"/>
+                        <Button
+                            android:id="@+id/btnBack"
+                            android:text="设置"
+                            android:background="@drawable/button_color"
+                            android:layout_height="30dp"
+                            android:layout_width="40dp"
+                            android:padding="0dp"
+                            android:textSize="14dp"
+                            />
+
+
+
+                    </LinearLayout>
                 </LinearLayout>
 
-                <LinearLayout android:layout_marginTop="5dp"
+                <LinearLayout android:orientation="horizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-                    <TextView android:text="零容电压:"
+                    android:layout_height="wrap_content">
+                    <LinearLayout android:layout_marginTop="5dp"
+                        android:layout_width="1dp"
                         android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"/>
-                    <EditText
-                        android:id="@+id/etZero"
-                        android:inputType="numberDecimal"
+                        android:layout_weight="1"
+                        android:orientation="horizontal">
+                        <TextView android:text="零容电压:"
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"/>
+                        <EditText
+                            android:id="@+id/etZero"
+                            android:inputType="numberDecimal"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/border_background"
+                            android:text="2"
+                            android:layout_gravity="center"
+                            android:padding="2dp"
+                            android:singleLine="true"
+                            android:layout_width="60dp"/>
+                        <Button android:text="设置"
+                            android:id="@+id/btnZeroSet"
+                            android:background="@drawable/button_color"
+                            android:layout_height="30dp"
+                            android:layout_width="40dp"
+                            android:padding="0dp"
+                            android:textSize="14dp"
+                            />
+                    </LinearLayout>
+                    <LinearLayout android:layout_marginTop="5dp"
+                        android:layout_width="1dp"
+                        android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/border_background"
-                        android:text="2"
-                        android:layout_gravity="center"
-                        android:padding="2dp"
-                        android:singleLine="true"
-                        android:layout_width="70dp"/>
-                    <Button android:text="设置"
-                        android:id="@+id/btnZeroSet"
-                        android:background="@drawable/button_color"
-                        android:layout_height="30dp"
-                        android:layout_width="40dp"
-                        android:padding="0dp"
-                        android:textSize="14dp"
-                        />
+                        android:orientation="horizontal">
+                        <TextView android:text="满容电压:"
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"/>
+                        <EditText
+                            android:id="@+id/etFull"
+                            android:inputType="numberDecimal"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/border_background"
+                            android:text="5"
+                            android:layout_gravity="center"
+                            android:padding="2dp"
+                            android:singleLine="true"
+                            android:layout_width="60dp"/>
+                        <Button android:text="设置"
+                            android:id="@+id/btnFullSet"
+                            android:background="@drawable/button_color"
+                            android:layout_height="30dp"
+                            android:layout_width="40dp"
+                            android:padding="0dp"
+                            android:textSize="14dp"
+                            />
+                    </LinearLayout>
+                </LinearLayout>
+                <LinearLayout android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <LinearLayout android:layout_marginTop="5dp"
+                        android:layout_width="1dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="horizontal">
+                        <TextView android:text="满容容量:"
+                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"/>
+                        <EditText
+                            android:id="@+id/etFullCapacity"
+                            android:inputType="numberDecimal"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/border_background"
+                            android:text="2"
+                            android:layout_gravity="center"
+                            android:padding="2dp"
+                            android:singleLine="true"
+                            android:layout_width="60dp"/>
+                        <Button android:text="设置"
+                            android:id="@+id/btnFullCapacitySet"
+                            android:background="@drawable/button_color"
+                            android:layout_height="30dp"
+                            android:layout_width="40dp"
+                            android:padding="0dp"
+                            android:textSize="14dp"
+                            />
+                    </LinearLayout>
+
                 </LinearLayout>
 
                 <LinearLayout android:layout_marginTop="10dp"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:orientation="horizontal"
-                    android:layout_gravity="center">
+                    >
                     <Button
                         android:id="@+id/btnClearWalt"
                         android:text="电量清零"
@@ -242,9 +334,10 @@
                         android:layout_gravity="center"
                         android:textSize="14dp"
                         android:layout_span="3"
+                        android:layout_weight="1"
                         />
 
-                        <Button
+                    <Button
                             android:id="@+id/btnClearPrice"
                             android:text="电费清零"
                             android:background="@drawable/button_color"
@@ -255,9 +348,37 @@
                             android:layout_gravity="center"
                             android:textSize="14dp"
                             android:layout_span="3"
+                            android:layout_weight="1"
                             />
 
+                    <Button
+                        android:id="@+id/btnClearCO2"
+                        android:text="二氧化碳清零"
+                        android:background="@drawable/button_color"
+                        android:layout_height="35dp"
+                        android:layout_width="wrap_content"
+                        android:padding="0dp"
+                        android:layout_marginLeft="5dp"
+                        android:layout_gravity="center"
+                        android:textSize="14dp"
+                        android:layout_span="3"
+                        android:layout_weight="1"
+                        />
 
+                    <Button
+                        android:id="@+id/btnClearTime"
+                        android:text="时间清零"
+                        android:background="@drawable/button_color"
+                        android:layout_height="35dp"
+                        android:layout_width="wrap_content"
+                        android:padding="0dp"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginRight="5dp"
+                        android:layout_gravity="center"
+                        android:textSize="14dp"
+                        android:layout_span="3"
+                        android:layout_weight="1"
+                        />
 
                 </LinearLayout>
 
@@ -276,6 +397,7 @@
                         android:layout_gravity="center"
                         android:textSize="14dp"
                         android:layout_span="3"
+                        android:layout_weight="1"
                         />
 
                     <Button
@@ -289,118 +411,9 @@
                         android:layout_gravity="center"
                         android:textSize="20sp"
                         android:layout_span="3"
+                        android:layout_weight="1"
                         />
 
-
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <LinearLayout android:layout_marginRight="5dp"
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-               <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                    <TextView android:text="背 光 (S) :"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
-                    <EditText
-                        android:id="@+id/etBackTime"
-                        android:inputType="number"
-                        android:background="@drawable/border_background"
-                        android:layout_height="wrap_content"
-                        android:text="50"
-                        android:layout_gravity="center"
-                        android:padding="2dp"
-                        android:singleLine="true"
-                        android:layout_width="70dp"/>
-                    <Button
-                        android:id="@+id/btnBack"
-                        android:text="设置"
-                        android:background="@drawable/button_color"
-                        android:layout_height="30dp"
-                        android:layout_width="40dp"
-                        android:padding="0dp"
-                        android:textSize="14dp"
-                        />
-
-
-
-            </LinearLayout>
-
-                <LinearLayout android:layout_marginTop="5dp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-                    <TextView android:text="满容电压:"
-                        android:layout_height="wrap_content"
-                        android:layout_width="wrap_content"/>
-                    <EditText
-                        android:id="@+id/etFull"
-                        android:inputType="numberDecimal"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/border_background"
-                        android:text="5"
-                        android:layout_gravity="center"
-                        android:padding="2dp"
-                        android:singleLine="true"
-                        android:layout_width="70dp"/>
-                    <Button android:text="设置"
-                        android:id="@+id/btnFullSet"
-                        android:background="@drawable/button_color"
-                        android:layout_height="30dp"
-                        android:layout_width="40dp"
-                        android:padding="0dp"
-                        android:textSize="14dp"
-                        />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="10dp"
-                    android:layout_gravity="center">
-                    <Button
-                        android:id="@+id/btnClearCO2"
-                        android:text="二氧化碳清零"
-                        android:background="@drawable/button_color"
-                        android:layout_height="35dp"
-                        android:layout_width="wrap_content"
-                        android:padding="0dp"
-                        android:layout_marginLeft="5dp"
-                        android:layout_gravity="center"
-                        android:textSize="14dp"
-                        android:layout_span="3"
-                        />
-
-                    <Button
-                        android:id="@+id/btnClearTime"
-                        android:text="时间清零"
-                        android:background="@drawable/button_color"
-                        android:layout_height="35dp"
-                        android:layout_width="wrap_content"
-                        android:padding="0dp"
-                        android:layout_marginLeft="5dp"
-                        android:layout_gravity="center"
-                        android:textSize="14dp"
-                        android:layout_span="3"
-                        />
-
-
-                </LinearLayout>
-
-                <LinearLayout android:layout_marginTop="10dp"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"
-                    android:orientation="horizontal"
-                    android:layout_gravity="center">
                     <Button
                         android:id="@+id/btnUP"
                         android:text="+"
@@ -412,6 +425,7 @@
                         android:layout_gravity="center"
                         android:textSize="20sp"
                         android:layout_span="3"
+                        android:layout_weight="1"
                         />
 
                     <Button
@@ -421,18 +435,17 @@
                         android:layout_height="35dp"
                         android:layout_width="wrap_content"
                         android:padding="0dp"
-
                         android:layout_marginLeft="5dp"
+                        android:layout_marginRight="5dp"
                         android:layout_gravity="center"
                         android:textSize="14dp"
                         android:layout_span="3"
+                        android:layout_weight="1"
                         />
 
-
-
                 </LinearLayout>
-            </LinearLayout>
 
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>
