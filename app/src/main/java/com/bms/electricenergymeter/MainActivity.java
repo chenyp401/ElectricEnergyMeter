@@ -32,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.primitives.Bytes;
 import com.inuker.bluetooth.library.BluetoothClient;
@@ -68,6 +69,15 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String UUID_Sever = "0000ffe0-0000-1000-8000-00805f9b34fb";
     public static final String UUID_NOTIFY = "0000ffe1-0000-1000-8000-00805f9b34fb";
+    private static final int REQUEST_ENABLE_BT = 1;
+    String[] permissions = new String[] {
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_ADVERTISE,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.ACCESS_FINE_LOCATION
+    };
     String address=null;
     String name=  null;
     BleGattService service= null;
@@ -407,6 +417,12 @@ public class MainActivity extends AppCompatActivity {
 
         baseTime=new Date(System.currentTimeMillis());
 
+        if (Build.VERSION.SDK_INT >= 6.0) {
+            ActivityCompat.requestPermissions(this,
+                    permissions ,
+                    0);
+        }
+
         //////////////////////////spp蓝牙/////////////////////////////////////////////////////////////
         //actionBar = getSupportActionBar();
         //创建蓝牙对象
@@ -596,14 +612,25 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.item_search) {
-            //查找蓝牙设备
-            Intent intent = new Intent(getApplicationContext(), DeviceList.class);
-            startActivityForResult(intent, BluetoothState.REQUEST_CONNECT_DEVICE);
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
+                    != PackageManager.PERMISSION_GRANTED)
+            {
+                // 如果权限尚未授予，则请求权限
+                ActivityCompat.requestPermissions(this,
+                        permissions ,
+                        REQUEST_ENABLE_BT);
+            }
+            else
+            {
+                //查找蓝牙设备
+                Intent intent = new Intent(getApplicationContext(), DeviceList.class);
+                startActivityForResult(intent, BluetoothState.REQUEST_CONNECT_DEVICE);
+            }
         }
         //清除蓝牙设备
         else if (item.getItemId() == R.id.item_clear) {
-            if (bt != null) {
-                removePairDevice(bt.mBluetoothAdapter);
+            if (mClient != null) {
+                removePairDevice(BluetoothAdapter.getDefaultAdapter());
             }
         }
         return super.onOptionsItemSelected(item);
@@ -611,20 +638,31 @@ public class MainActivity extends AppCompatActivity {
 
     //请求权限
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
+    {
 
-        switch (requestCode) {
+        switch (requestCode)
+        {
             case 0: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0]
                         == PackageManager.PERMISSION_GRANTED) {
                     //permission granted!
-                }
-                return;
-            }
+                };
 
-        }
+            }
+            case REQUEST_ENABLE_BT: {
+                // 如果请求被取消，permissions数组为空
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // 用户授予了蓝牙权限，可以执行蓝牙操作
+                    // 在此处添加蓝牙操作的代码
+                } else {
+                    // 用户拒绝了权限请求，可以显示一个提示，或者禁用蓝牙功能等
+                }
+
+            }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
     //得到配对的设备列表，清除已配对的设备
