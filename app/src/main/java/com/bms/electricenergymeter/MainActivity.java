@@ -8,16 +8,23 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattService;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,6 +39,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.primitives.Bytes;
@@ -54,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Timer;
@@ -70,18 +80,26 @@ public class MainActivity extends AppCompatActivity {
     public static final String UUID_Sever = "0000ffe0-0000-1000-8000-00805f9b34fb";
     public static final String UUID_NOTIFY = "0000ffe1-0000-1000-8000-00805f9b34fb";
     private static final int REQUEST_ENABLE_BT = 1;
-    String[] permissions = new String[] {
+    private static final int REQUEST_CODE_SYSTEM_ALERT_WINDOW = 2;
+    String[] permissions = new String[]{
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
             Manifest.permission.BLUETOOTH_SCAN,
             Manifest.permission.BLUETOOTH_ADVERTISE,
             Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.SYSTEM_ALERT_WINDOW,
+
     };
-    String address=null;
-    String name=  null;
-    BleGattService service= null;
-    BleGattCharacter charact=null;
+    boolean isTempAlarm = false;
+    boolean isCapcityAlarm = false;
+    NotificationChannel channel;
+    double curCapacity = -1;
+    String address = null;
+    String name = null;
+    String notifyChannelId = "notifyChannelId";
+    BleGattService service = null;
+    BleGattCharacter charact = null;
     BleNotifyResponse bleNotifyResponse;
     BleConnectResponse bleConnectResponse;
     BleWriteResponse bleWriteResponse;
@@ -126,6 +144,10 @@ public class MainActivity extends AppCompatActivity {
     TextView tvTempIn;
     //运行时间
     TextView tvRunTime;
+    //容量百分比
+    TextView tvCapacityPer1;
+    //充放电状态
+    TextView tvChargeStatus;
 
     //电价
     EditText etPrice;
@@ -135,10 +157,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     //0容量电压
-    EditText etZeroVoltage;
+    EditText etTempAlarm;
 
     //满容量电压
-    EditText etFullVoltage;
+    EditText etCapcityAlarm;
 
     //满容量容量
     EditText etFullCapacity;
@@ -175,9 +197,11 @@ public class MainActivity extends AppCompatActivity {
     BluetoothClient mClient;
     Date baseTime;
 
-    float minVoltage=2;
-    float maxVoltage=5;
-    float fullCapacity=100;
+    float tempAlarm = 2;
+    float capacityAlarm = 5;
+    float fullCapacity = 100;
+
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -186,242 +210,261 @@ public class MainActivity extends AppCompatActivity {
         //设置工具栏
         myToolbar = (Toolbar) findViewById(R.id.toolBar);
         setSupportActionBar(myToolbar);
-        btStatus=(TextView)findViewById(R.id.tvStatus) ;
-        btStatus.setText(getString(R.string.bluetooth_status)+"无");
-
-
+        btStatus = (TextView) findViewById(R.id.tvStatus);
+        btStatus.setText(getString(R.string.bluetooth_status) + "无");
 
         //电池控件
-         battery=(BatteryView) findViewById(R.id.batter);
+        battery = (BatteryView) findViewById(R.id.batter);
         //电压控件
-         tvVoltage=(TextView)findViewById(R.id.tvVoltage);
+        tvVoltage = (TextView) findViewById(R.id.tvVoltage);
         //电流控件
-         tvCurrent=(TextView)findViewById(R.id.tvCurrent);
+        tvCurrent = (TextView) findViewById(R.id.tvCurrent);
         //功率
-         tvPower=(TextView)findViewById(R.id.tvPower);
+        tvPower = (TextView) findViewById(R.id.tvPower);
         //容量
-         tvCapacity=(TextView)findViewById(R.id.tvCapacity);
+        tvCapacity = (TextView) findViewById(R.id.tvCapacity);
         //电量
-         tvWalt=(TextView)findViewById(R.id.tvWalt);
+        tvWalt = (TextView) findViewById(R.id.tvWalt);
         //二氧化碳
-         tvCO2=(TextView)findViewById(R.id.tvCO2);
+        tvCO2 = (TextView) findViewById(R.id.tvCO2);
         //累计电费
-         tvPowerRate=(TextView)findViewById(R.id.tvPowerRate);
+        tvPowerRate = (TextView) findViewById(R.id.tvPowerRate);
 
         //百分比
-         tvCapacityPer=(TextView)findViewById(R.id.tvCapacityPer);
+        tvCapacityPer = (TextView) findViewById(R.id.tvCapacityPer);
         //机内温度
-         tvTempIn=(TextView)findViewById(R.id.tvTempIn);
+        tvTempIn = (TextView) findViewById(R.id.tvTempIn);
         //运行时间
-         tvRunTime=(TextView)findViewById(R.id.tvRunTime);
+        tvRunTime = (TextView) findViewById(R.id.tvRunTime);
+
+        tvCapacityPer1 = (TextView) findViewById(R.id.tvCapacityPer1);
+        //充放电状态
+        tvChargeStatus = (TextView) findViewById(R.id.tvChargeStatus);
 
         //电价
-         etPrice=(EditText)findViewById(R.id.etPrice);
+        etPrice = (EditText) findViewById(R.id.etPrice);
 
         //背光
-         etBackTime=(EditText)findViewById(R.id.etBackTime);
+        etBackTime = (EditText) findViewById(R.id.etBackTime);
 
         //电价设置
-         btnPrice=(Button) findViewById(R.id.btnPrice);
-         btnPrice.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 String str= etPrice.getText().toString();
-                 float price=Float.parseFloat(str);
-                 byte[] buff=new byte[]{(byte) 255,85,17, 2,34,0,0,0,0,0};
-                 buff[6]=(byte)((long)Math.round((price * 100.0)) / 65536L);
-                 buff[7] = (byte)((long)Math.round((price * 100.0 - (double)((65536L * ((long)Math.round((price * 100.0)) / 65536L))))) / 256L);
-                 buff[8] = (byte)Math.round((price * 100.0) % 256.0);
-                 int num = (int)Math.round(((double) (buff[2]) + (double) (buff[3]) + (double) (buff[4]) + (double) (buff[6]) + (double) (buff[7]) + (double) (buff[8])));
-                 if (num > 256)
-                 {
-                     num %= 256;
-                 }
-                 buff[9]=(byte)(num^68) ;
-                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
-             }
-         });
+        btnPrice = (Button) findViewById(R.id.btnPrice);
+        btnPrice.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String str = etPrice.getText().toString();
+                float price = Float.parseFloat(str);
+                byte[] buff = new byte[]{(byte) 255, 85, 17, 2, 34, 0, 0, 0, 0, 0};
+                buff[6] = (byte) ((long) Math.round((price * 100.0)) / 65536L);
+                buff[7] = (byte) ((long) Math.round((price * 100.0 - (double) ((65536L * ((long) Math.round((price * 100.0)) / 65536L))))) / 256L);
+                buff[8] = (byte) Math.round((price * 100.0) % 256.0);
+                int num = (int) Math.round(((double) (buff[2]) + (double) (buff[3]) + (double) (buff[4]) + (double) (buff[6]) + (double) (buff[7]) + (double) (buff[8])));
+                if (num > 256) {
+                    num %= 256;
+                }
+                buff[9] = (byte) (num ^ 68);
+                if (iSBleEnable())
+                    mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
+            }
+        });
         //背光设置
-         btnBack=(Button)findViewById(R.id.btnBack);
-         btnBack.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 String str= etBackTime.getText().toString();
-                 float tm=Float.parseFloat(str);
-                 byte[] buff=new byte[]{(byte) 255,85,17, 2,33,0,0,0,0,0};
-                 buff[8] = (byte)tm;
-                 buff[9]=(byte)(buff[2]+buff[3]+buff[4]+buff[8]^68) ;
-                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
-             }
-         });
+        btnBack = (Button) findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String str = etBackTime.getText().toString();
+                float tm = Float.parseFloat(str);
+                byte[] buff = new byte[]{(byte) 255, 85, 17, 2, 33, 0, 0, 0, 0, 0};
+                buff[8] = (byte) tm;
+                buff[9] = (byte) (buff[2] + buff[3] + buff[4] + buff[8] ^ 68);
+                if (iSBleEnable())
+                    mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
+            }
+        });
 
         //电量清零
-         btnClearWalt=(Button)findViewById(R.id.btnClearWalt);
-         btnClearWalt.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 byte[] buff=new byte[]{(byte) 255,85,17, 2,1,0,0,0,0,0};
-                 buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff,bleWriteResponse);
-             }
-         });
+        btnClearWalt = (Button) findViewById(R.id.btnClearWalt);
+        btnClearWalt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                byte[] buff = new byte[]{(byte) 255, 85, 17, 2, 1, 0, 0, 0, 0, 0};
+                buff[9] = (byte) (buff[2] + buff[3] + buff[4] ^ 68);
+                if (iSBleEnable())
+                    mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
+            }
+        });
         //电费清零
-         btnClearPrice=(Button)findViewById(R.id.btnClearPrice);
-         btnClearPrice.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 byte[] buff=new byte[]{(byte) 255,85,17, 2,1,0,0,0,0,0};
-                 buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff,bleWriteResponse);
-             }
-         });
+        btnClearPrice = (Button) findViewById(R.id.btnClearPrice);
+        btnClearPrice.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                byte[] buff = new byte[]{(byte) 255, 85, 17, 2, 1, 0, 0, 0, 0, 0};
+                buff[9] = (byte) (buff[2] + buff[3] + buff[4] ^ 68);
+                if (iSBleEnable())
+                    mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
+            }
+        });
         //二氧化碳清零
-         btnClearCO2=(Button)findViewById(R.id.btnClearCO2);
-         btnClearCO2.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 byte[] buff=new byte[]{(byte) 255,85,17, 2,1,0,0,0,0,0};
-                 buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
-             }
-         });
+        btnClearCO2 = (Button) findViewById(R.id.btnClearCO2);
+        btnClearCO2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                byte[] buff = new byte[]{(byte) 255, 85, 17, 2, 1, 0, 0, 0, 0, 0};
+                buff[9] = (byte) (buff[2] + buff[3] + buff[4] ^ 68);
+                if (iSBleEnable())
+                    mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
+            }
+        });
         //时间清零
-         btnClearTime=(Button)findViewById(R.id.btnClearTime);
-         btnClearTime.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 baseTime=new Date(System.currentTimeMillis());
-             }
-         });
+        btnClearTime = (Button) findViewById(R.id.btnClearTime);
+        btnClearTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                baseTime = new Date(System.currentTimeMillis());
+            }
+        });
         //设置
-         btnSet=(Button)findViewById(R.id.btnSet);
-         btnSet.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 byte[] buff=new byte[]{(byte) 255,85,17, 2,49,0,0,0,0,0};
-                 buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff,bleWriteResponse);
-             }
-         });
+        btnSet = (Button) findViewById(R.id.btnSet);
+        btnSet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                byte[] buff = new byte[]{(byte) 255, 85, 17, 2, 49, 0, 0, 0, 0, 0};
+                buff[9] = (byte) (buff[2] + buff[3] + buff[4] ^ 68);
+                if (iSBleEnable())
+                    mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
+            }
+        });
         //-
-         btDn=(Button)findViewById(R.id.btDn);
-         btDn.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 byte[] buff=new byte[]{(byte) 255,85,17, 2,52,0,0,0,0,0};
-                 buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
-             }
-         });
+        btDn = (Button) findViewById(R.id.btDn);
+        btDn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                byte[] buff = new byte[]{(byte) 255, 85, 17, 2, 52, 0, 0, 0, 0, 0};
+                buff[9] = (byte) (buff[2] + buff[3] + buff[4] ^ 68);
+                if (iSBleEnable())
+                    mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
+            }
+        });
         //+
-         btnUP=(Button)findViewById(R.id.btnUP);
-         btnUP.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 byte[] buff=new byte[]{(byte) 255,85,17, 2,51,0,0,0,0,0};
-                 buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
-             }
-         });
+        btnUP = (Button) findViewById(R.id.btnUP);
+        btnUP.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                byte[] buff = new byte[]{(byte) 255, 85, 17, 2, 51, 0, 0, 0, 0, 0};
+                buff[9] = (byte) (buff[2] + buff[3] + buff[4] ^ 68);
+                if (iSBleEnable())
+                    mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
+            }
+        });
         //确  定
-         btnConfirm=(Button)findViewById(R.id.btnConfirm);
-         btnConfirm.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-                 byte[] buff=new byte[]{(byte) 255,85,17, 2,50,0,0,0,0,0};
-                 buff[9]= (byte) (buff[2]+buff[3]+buff[4]^68);
-                 if (iSBleEnable())mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
-             }
-         });
+        btnConfirm = (Button) findViewById(R.id.btnConfirm);
+        btnConfirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                byte[] buff = new byte[]{(byte) 255, 85, 17, 2, 50, 0, 0, 0, 0, 0};
+                buff[9] = (byte) (buff[2] + buff[3] + buff[4] ^ 68);
+                if (iSBleEnable())
+                    mClient.write(address, service.getUUID(), charact.getUuid(), buff, bleWriteResponse);
+            }
+        });
 
-        etZeroVoltage=(EditText)findViewById(R.id.etZero);
-        etFullVoltage=(EditText)findViewById(R.id.etFull);
-        btnZeroVoltage=(Button)findViewById(R.id.btnZeroSet) ;
+        etTempAlarm = (EditText) findViewById(R.id.etTempAlarm);
+        etCapcityAlarm = (EditText) findViewById(R.id.etCapcityAlarm);
+        btnZeroVoltage = (Button) findViewById(R.id.btnZeroSet);
         btnZeroVoltage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (Float.parseFloat(etZeroVoltage.getText().toString())<=0)
-                {
-                    Toast.makeText(getApplicationContext(),"零容电压要大于0！",Toast.LENGTH_LONG).show();
-                    return;
-                }
-                if (Float.parseFloat(etFullVoltage.getText().toString())<=Float.parseFloat(etZeroVoltage.getText().toString()))
-                {
-                    Toast.makeText(getApplicationContext(),"满容电压要大于零容电压！",Toast.LENGTH_LONG).show();
-                    return;
-                }
+//                if (Float.parseFloat(etTempAlarm.getText().toString())<=0)
+//                {
+//                    Toast.makeText(getApplicationContext(),"零容电压要大于0！",Toast.LENGTH_LONG).show();
+//                    return;
+//                }
+//                if (Float.parseFloat(etFullVoltage.getText().toString())<=Float.parseFloat(etZeroVoltage.getText().toString()))
+//                {
+//                    Toast.makeText(getApplicationContext(),"满容电压要大于零容电压！",Toast.LENGTH_LONG).show();
+//                    return;
+//                }
                 //保存0容量电压
-                SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
-                SharedPreferences.Editor edit=sp.edit();
-                edit.putString("zeroCapacityVoltage",etZeroVoltage.getText().toString());
+                SharedPreferences sp = getSharedPreferences("ConnectDevice", MODE_PRIVATE);
+                SharedPreferences.Editor edit = sp.edit();
+                edit.putString("zeroCapacityVoltage", etTempAlarm.getText().toString());
                 edit.apply();
-                minVoltage=Float.parseFloat(etZeroVoltage.getText().toString());
+                tempAlarm = Float.parseFloat(etTempAlarm.getText().toString());
             }
         });
 
-      btnFullVoltage=(Button) findViewById(R.id.btnFullSet);
-      btnFullVoltage.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View view) {
+        btnFullVoltage = (Button) findViewById(R.id.btnFullSet);
+        btnFullVoltage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
-              if (Float.parseFloat(etFullVoltage.getText().toString())<=0)
-              {
-                  Toast.makeText(getApplicationContext(),"满容电压要大于0！",Toast.LENGTH_LONG).show();
-                  return;
-              }
-              if (Float.parseFloat(etFullVoltage.getText().toString())<=Float.parseFloat(etZeroVoltage.getText().toString()))
-              {
-                  Toast.makeText(getApplicationContext(),"满容电压要大于零容电压！",Toast.LENGTH_LONG).show();
-                  return;
-              }
-              //保存满容量电压
-              SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
-              SharedPreferences.Editor edit=sp.edit();
-              edit.putString("fullCapacityVoltage",etFullVoltage.getText().toString());
-              edit.apply();
-              maxVoltage=Float.parseFloat(etFullVoltage.getText().toString());
-          }
-      });
+                if (Float.parseFloat(etCapcityAlarm.getText().toString()) <= 0) {
+                    Toast.makeText(getApplicationContext(), "容量预警值要大于0！", Toast.LENGTH_LONG).show();
+                    return;
+                }
+//              if (Float.parseFloat(etCapcityAlarm.getText().toString())<=Float.parseFloat(etCapcityAlarm.getText().toString()))
+//              {
+//                  Toast.makeText(getApplicationContext(),"满容电压要大于零容电压！",Toast.LENGTH_LONG).show();
+//                  return;
+//              }
+                //保存满容量电压
+                SharedPreferences sp = getSharedPreferences("ConnectDevice", MODE_PRIVATE);
+                SharedPreferences.Editor edit = sp.edit();
+                edit.putString("fullCapacityVoltage", etCapcityAlarm.getText().toString());
+                edit.apply();
+                capacityAlarm = Float.parseFloat(etCapcityAlarm.getText().toString());
+            }
+        });
 
-        etFullCapacity=(EditText) findViewById(R.id.etFullCapacity);
-        btnFullCapacitySet=(Button)findViewById(R.id.btnFullCapacitySet);
+        etFullCapacity = (EditText) findViewById(R.id.etFullCapacity);
+        btnFullCapacitySet = (Button) findViewById(R.id.btnFullCapacitySet);
         btnFullCapacitySet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (Float.parseFloat(etFullCapacity.getText().toString())<=0)
-                {
-                    Toast.makeText(getApplicationContext(),"满容容量要大于0！",Toast.LENGTH_LONG).show();
+                if (Float.parseFloat(etFullCapacity.getText().toString()) <= 0) {
+                    Toast.makeText(getApplicationContext(), "满容容量要大于0！", Toast.LENGTH_LONG).show();
                     return;
                 }
                 //保存满容量容量
-                SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
-                SharedPreferences.Editor edit=sp.edit();
-                edit.putString("fullCapacity",etFullCapacity.getText().toString());
+                SharedPreferences sp = getSharedPreferences("ConnectDevice", MODE_PRIVATE);
+                SharedPreferences.Editor edit = sp.edit();
+                edit.putString("fullCapacity", etFullCapacity.getText().toString());
                 edit.apply();
-                fullCapacity=Float.parseFloat(etFullCapacity.getText().toString());
+                fullCapacity = Float.parseFloat(etFullCapacity.getText().toString());
             }
         });
 
-        SharedPreferences sp=getSharedPreferences("ConnectDevice",MODE_PRIVATE);
-        String strZero=sp.getString("zeroCapacityVoltage","2");
-        String strFull=sp.getString("fullCapacityVoltage","5");
-        String strFullCapacity=sp.getString("fullCapacity","5");
+        SharedPreferences sp = getSharedPreferences("ConnectDevice", MODE_PRIVATE);
+        String strZero = sp.getString("zeroCapacityVoltage", "2");
+        String strFull = sp.getString("fullCapacityVoltage", "5");
+        String strFullCapacity = sp.getString("fullCapacity", "5");
 
-        minVoltage=Float.parseFloat(strZero);
-        maxVoltage=Float.parseFloat(strFull);
-        fullCapacity=Float.parseFloat(strFullCapacity);
+        tempAlarm = Float.parseFloat(strZero);
+        capacityAlarm = Float.parseFloat(strFull);
+        fullCapacity = Float.parseFloat(strFullCapacity);
 
-        etZeroVoltage.setText(strZero);
-        etFullVoltage.setText(strFull);
+        etTempAlarm.setText(strZero);
+        etCapcityAlarm.setText(strFull);
         etFullCapacity.setText(strFullCapacity);
 
-        baseTime=new Date(System.currentTimeMillis());
+        baseTime = new Date(System.currentTimeMillis());
 
         if (Build.VERSION.SDK_INT >= 6.0) {
             ActivityCompat.requestPermissions(this,
-                    permissions ,
+                    permissions,
                     0);
         }
+
+        // 检查权限是否已经被授予
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            // 如果没有授权，跳转到权限设置界面
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+            startActivityForResult(intent, REQUEST_CODE_SYSTEM_ALERT_WINDOW);
+        } else {
+            // 权限已经被授予，执行相应操作
+            // 在这里执行后台弹窗的代码
+        }
+
 
         //////////////////////////spp蓝牙/////////////////////////////////////////////////////////////
         //actionBar = getSupportActionBar();
@@ -568,10 +611,11 @@ public class MainActivity extends AppCompatActivity {
         mClient = new BluetoothClient(this);
 
 
-        tm=new Timer();
+        tm = new Timer();
         tm.schedule(new TimerTask() {
             @Override
             public void run() {
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -589,10 +633,9 @@ public class MainActivity extends AppCompatActivity {
                             // 获取时间差的秒数
                             long seconds = diff / 1000;
                             DecimalFormat df = new DecimalFormat("00");
-                            tvRunTime.setText(df.format(hours- days * 24)+":"+df.format(minutes- hours * 60)+":"+df.format(seconds - minutes * 60));
+                            tvRunTime.setText(df.format(hours - days * 24) + ":" + df.format(minutes - hours * 60) + ":" + df.format(seconds - minutes * 60));
 
                         }
-
                     }
                 });
 
@@ -632,6 +675,56 @@ public class MainActivity extends AppCompatActivity {
             if (mClient != null) {
                 removePairDevice(BluetoothAdapter.getDefaultAdapter());
             }
+        } else if (item.getItemId()==R.id.chinese) {
+
+            // 设置为中文
+            Locale locale = new Locale("zh");
+            Locale.setDefault(locale);
+
+            Configuration config = new Configuration();
+            config.locale = locale;
+            getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+
+            // 重新启动 Activity 或刷新当前界面以应用新的语言设置
+            Intent refreshIntent = new Intent(this, MainActivity.class);
+            startActivity(refreshIntent);
+        } else if (item.getItemId()==R.id.english) {
+            // 设置为英文文
+            Locale locale = new Locale("en");
+            Locale.setDefault(locale);
+
+            Configuration config = new Configuration();
+            config.locale = locale;
+            getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+
+            // 重新启动 Activity 或刷新当前界面以应用新的语言设置
+            Intent refreshIntent = new Intent(this, MainActivity.class);
+            startActivity(refreshIntent);
+        } else if (item.getItemId()==R.id.japanese) {
+            // 设置为日语
+            Locale locale = new Locale("ja");
+            Locale.setDefault(locale);
+
+            Configuration config = new Configuration();
+            config.locale = locale;
+            getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+
+            // 重新启动 Activity 或刷新当前界面以应用新的语言设置
+            Intent refreshIntent = new Intent(this, MainActivity.class);
+            startActivity(refreshIntent);
+        }
+        else if (item.getItemId()==R.id.korean) {
+            // 设置为韩文
+            Locale locale = new Locale("ko");
+            Locale.setDefault(locale);
+
+            Configuration config = new Configuration();
+            config.locale = locale;
+            getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+
+            // 重新启动 Activity 或刷新当前界面以应用新的语言设置
+            Intent refreshIntent = new Intent(this, MainActivity.class);
+            startActivity(refreshIntent);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -735,7 +828,7 @@ public class MainActivity extends AppCompatActivity {
         // 创建一个 Calendar 对象
         Calendar calendar = Calendar.getInstance();
         // 设置年、月、日、时、分、秒
-        calendar.set(2023, 11, 16, 0, 0, 0); // 注意月份是从 0 开始的，所以 11 表示 12 月
+        calendar.set(2024, 0, 1, 0, 0, 0); // 注意月份是从 0 开始的，所以 11 表示 12 月
         // 获取一个 Date 对象
         Date date = calendar.getTime();
         Date cur=new Date(System.currentTimeMillis());
@@ -811,6 +904,7 @@ public class MainActivity extends AppCompatActivity {
             //蓝牙接收数据回调
             bleNotifyResponse=new BleNotifyResponse()
             {
+                int count=0;
                 ArrayList<Byte> lst=new ArrayList<Byte>() ;
                 @Override
                 public void onNotify(UUID service, UUID character, byte[] vals)
@@ -847,6 +941,31 @@ public class MainActivity extends AppCompatActivity {
                                     double tempIn=Byte.toUnsignedInt(data[24]) * 256 + Byte.toUnsignedInt(data[25]);
                                     double backTime=data[30];
 
+                                    if (curCapacity!=-1)
+                                    {
+                                        if (curCapacity>totalCapacity)
+                                        {
+                                            tvChargeStatus.setText(R.string.Discharging+" ");
+                                        }
+                                        else if (curCapacity<totalCapacity)
+                                        {
+                                            tvChargeStatus.setText(R.string.Charging+" ");
+                                        }
+                                        else
+                                        {
+                                            if (count==60)
+                                            {
+                                                tvChargeStatus.setText(" ");
+                                            }
+                                        }
+                                        curCapacity=totalCapacity;
+                                    }
+                                    else
+                                    {
+                                        tvChargeStatus.setText("");
+                                    }
+
+
                                     tvVoltage.setText(df1.format(voltage));
                                     tvCurrent.setText(df3.format(current));
                                     tvPower.setText(df1.format(power));
@@ -874,25 +993,68 @@ public class MainActivity extends AppCompatActivity {
 //                                        volMax=Double.parseDouble(etFullVoltage.getText().toString());
 //                                    }
 
-                                    if (name.contains("SPP") || name.contains("spp") )
-                                    {
-                                        if (maxVoltage-minVoltage>0)
-                                        {
-                                            double capacity=(voltage-minVoltage)/(maxVoltage-minVoltage);
-                                            battery.setPower((int)(capacity*100));
-                                            tvCapacityPer.setText(df.format((int)(capacity*100)));
-                                        }
-                                    }
-                                    if (name.contains("BLE") || name.contains("ble") )
+//                                    if (name.contains("SPP") || name.contains("spp") )
+//                                    {
+//                                        if (maxVoltage-minVoltage>0)
+//                                        {
+//                                            double capacity=(voltage-minVoltage)/(maxVoltage-minVoltage);
+//                                            battery.setPower((int)(capacity*100));
+//                                            tvCapacityPer.setText(df.format((int)(capacity*100)));
+//                                        }
+//                                    }
+//                                    if (name.contains("BLE") || name.contains("ble") )
                                     {
                                         if (fullCapacity>0)
                                         {
                                             double capacity=totalCapacity/fullCapacity;
                                             battery.setPower((int)(capacity*100));
                                             tvCapacityPer.setText(df.format((int)(capacity*100)));
+                                            tvCapacityPer1.setText(df.format((int)(capacity*100)));
                                         }
                                     }
 
+                                    //报警通知
+
+
+                                    if (isTempAlarm==false && tempAlarm<tempIn )
+                                    {
+                                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                        intent.putExtra("notificationId", (int) 1); // 在 Intent 中添加额外的数据，比如通知 ID
+                                        intent.putExtra("isTempAlarm", true);
+                                        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                        createNotificationChannel(MainActivity.this);
+
+                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, notifyChannelId)
+                                                .setSmallIcon(R.drawable.alarm)
+                                                .setContentTitle("温度报警")
+                                                .setContentText("当前温度："+tempIn+"℃")
+                                                .setContentIntent(pendingIntent)
+                                                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                                        notificationManager.notify((int) 1, builder.build());
+                                        isTempAlarm=true;
+                                    }
+
+                                    if (isCapcityAlarm==false && totalCapacity<capacityAlarm)
+                                    {
+                                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                        intent.putExtra("notificationId", (int) 2); // 在 Intent 中添加额外的数据，比如通知 ID
+                                        intent.putExtra("isCapacityAlarm", true);
+                                        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                        createNotificationChannel(MainActivity.this);
+
+                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, notifyChannelId)
+                                                .setSmallIcon(R.drawable.alarm)
+                                                .setContentTitle("容量报警")
+                                                .setContentText("当前容量："+totalCapacity +"AH")
+                                                .setContentIntent(pendingIntent)
+                                                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                                        notificationManager.notify((int) 2, builder.build());
+                                        isCapcityAlarm=true;
+                                    }
                                 }
                             });
                             lst.clear();
@@ -1008,5 +1170,43 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         bt.stopService();
         super.onDestroy();
+    }
+
+    private void createNotificationChannel(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = notifyChannelId;
+            String description = notifyChannelId;
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(notifyChannelId, name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    @Override
+    protected void  onResume()
+    {
+        super.onResume();
+        // 检查是否是由通知触发的
+        if (getIntent().getExtras() != null && getIntent().hasExtra("notificationId")) {
+            // 处理通知点击事件
+            int notificationId = getIntent().getIntExtra("notificationId", 0);
+            boolean btmp = (boolean) getIntent().getBooleanExtra("notificationId", false);
+            boolean bcapa = (boolean) getIntent().getBooleanExtra("isTempAlarm", false);
+            // 根据通知ID执行相应操作
+            // 例如，跳转到特定页面或执行其他逻辑
+            if (notificationId==1)
+            {
+               if(btmp) isTempAlarm=false;
+
+            }
+            if(notificationId==2)
+            {
+                if(bcapa) isCapcityAlarm=false;
+            }
+
+        }
     }
 }

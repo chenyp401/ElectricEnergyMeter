@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">电能表</string>
+    <string name="connect">连接</string>
+    <string name="disconnect">断开</string>
+    <string name="bluetooth_status">当前连接设备：</string>
+    <string name="voltage">电      压：</string>
+    <string name="current">电      流：</string>
+    <string name="carbondioxide">二氧化碳：</string>
+    <string name="accumulatedElectricityBill">累计电费：</string>
+    <string name="power">功      率：</string>
+    <string name="percentage">百  分  比：</string>
+    <string name="AccumulatedCapacity">累计容量：</string>
+    <string name="temperature">机内温度：</string>
+    <string name="AccumulatedPower">累计电量：</string>
+    <string name="reckonByTime">计         时：</string>
+    <string name="electricityPrice">电价 (元):</string>
+    <string name="backlight">背 光 (S):</string>
+    <string name="temperatureWarning">温度预警:</string>
+    <string name="capacityWarning">容量预警:</string>
+    <string name="fullCapacity">满容容量:</string>
+    <string name="zeroBattery">电量清零</string>
+    <string name="zeroElectricityBills">电费清零</string>
+    <string name="zerocarbondioxide">二氧化碳清零</string>
+    <string name="zeroTime">时间清零</string>
+    <string name="setup">设    置</string>
+    <string name="setting">设置</string>
+    <string name="determine">确  定</string>
+    <string name="Charging">充电中</string>
+    <string name="Discharging">放电中</string>
+
+    <string name="Chinese">中文</string>
+    <string name="English">英语</string>
+    <string name="Japanese">日语</string>
+    <string name="Korean">韩语</string>
+    <string name="language">语言</string>
+</resources>

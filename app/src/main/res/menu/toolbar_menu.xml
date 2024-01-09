@@ -11,4 +11,19 @@
         android:id="@+id/item_search"
         android:icon="@mipmap/radar"
         app:showAsAction="ifRoom|withText"/>
+
+    <item
+        android:id="@+id/chinese"
+        android:title="@string/Chinese"
+        app:showAsAction="ifRoom|withText" />
+    <item android:title="@string/English"
+        android:id="@+id/english"
+        app:showAsAction="ifRoom|withText"/>
+    <item android:title="@string/Japanese"
+        android:id="@+id/japanese"
+        app:showAsAction="ifRoom|withText"/>
+    <item android:title="@string/Korean"
+        android:id="@+id/korean"
+        app:showAsAction="ifRoom|withText"/>
+
 </menu>

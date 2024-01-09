@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">電力メーター</string>
+    <string name="connect">接続</string>
+    <string name="disconnect">切断</string>
+    <string name="bluetooth_status">現在の接続デバイス：</string>
+    <string name="voltage">電      圧：</string>
+    <string name="current">電      流：</string>
+    <string name="carbondioxide">二酸化炭素：</string>
+    <string name="accumulatedElectricityBill">累計電気料金：</string>
+    <string name="power">功      率：</string>
+    <string name="percentage">百  分  比：</string>
+    <string name="AccumulatedCapacity">累計容量：</string>
+    <string name="temperature">機内温度：</string>
+    <string name="AccumulatedPower">累計電力量：</string>
+    <string name="reckonByTime">計         時：</string>
+    <string name="electricityPrice">電気料金 (円):</string>
+    <string name="backlight">背 光 (秒):</string>
+    <string name="temperatureWarning">温度警告:</string>
+    <string name="capacityWarning">容量警告:</string>
+    <string name="fullCapacity">満容量:</string>
+    <string name="zeroBattery">電池残量リセット</string>
+    <string name="zeroElectricityBills">電気料金リセット</string>
+    <string name="zerocarbondioxide">二酸化炭素リセット</string>
+    <string name="zeroTime">時間リセット</string>
+    <string name="setup">設    定</string>
+    <string name="setting">設定</string>
+    <string name="determine">確  定</string>
+    <string name="Charging">充電中</string>
+    <string name="Discharging">放電中</string>
+
+    <string name="Chinese">中国語</string>
+    <string name="English">英語</string>
+    <string name="Japanese">日本語</string>
+    <string name="Korean">韓国語</string>
+    <string name="language">言語</string>
+</resources>

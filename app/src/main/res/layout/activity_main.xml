@@ -8,7 +8,7 @@
         android:id="@+id/toolBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:title="电能表"
+        app:title="@string/app_name"
         android:background="?attr/colorPrimaryDark"
         android:minHeight="?attr/actionBarSize"
           />
@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:text="@string/bluetooth_status"/>
     </LinearLayout>
 
@@ -34,50 +34,83 @@
         android:layout_margin="10dp"
         >
 
-        <com.bms.electricenergymeter.BatteryView
-            android:id="@+id/batter"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="20dp"
-            android:background="@color/white"
-            app:batteryColor="#00FF00"
-            app:batteryOrientation="horizontal"
-            app:batteryPower="0" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <com.bms.electricenergymeter.BatteryView
+                android:id="@+id/batter"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/white"
+                app:batteryColor="#00FF00"
+                app:batteryOrientation="horizontal"
+                app:batteryPower="0" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_centerInParent="true">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" "
+                    android:id="@+id/tvChargeStatus"
+                    />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0.0"
+                    android:textSize="16sp"
+                    android:id="@+id/tvCapacityPer1"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:text=" %" />
+            </LinearLayout>
+
+
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="140dp"
+            android:layout_height="120dp"
             android:orientation="horizontal"
             android:background="@drawable/border_background">
             <TableLayout
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginLeft="10dp"
+                android:layout_marginLeft="5dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
                 android:layout_marginRight="0dp">
                 <TableRow >
-                    <TextView android:text="电      压：" android:textSize="16sp" />
+                    <TextView android:text="@string/voltage" android:textSize="14sp" />
                     <TextView android:id="@+id/tvVoltage"
-                        android:text="4.7" android:textSize="16sp"/>
+                        android:text="4.7" android:textSize="14sp"/>
                     <TextView android:text=" V" />
                 </TableRow>
 
                 <TableRow >
-                    <TextView android:text="电      流：" android:textSize="16sp"/>
+                    <TextView android:text="@string/current" android:textSize="14sp"/>
                     <TextView android:id="@+id/tvCurrent"
-                        android:text="4.7" android:textSize="16dp"/>
+                        android:text="4.7" android:textSize="14sp"/>
                     <TextView android:text=" A"/>
                 </TableRow>
 
                 <TableRow >
-                    <TextView android:text="功      率：" android:textSize="16sp"/>
+                    <TextView android:text="@string/power" android:textSize="14sp"/>
                     <TextView android:id="@+id/tvPower"
-                        android:text="4.7" android:textSize="16sp"/>
+                        android:text="4.7" android:textSize="14sp"/>
                     <TextView android:text=" W"/>
                 </TableRow>
 
@@ -89,16 +122,17 @@
 <!--                </TableRow>-->
 
                 <TableRow >
-                    <TextView android:text="累计容量：" android:textSize="16sp"/>
+                    <TextView android:text="@string/AccumulatedCapacity"
+                        android:textSize="14sp"/>
                     <TextView android:id="@+id/tvCapacity"
-                        android:text="4.7" android:textSize="16sp"/>
+                        android:text="4.7" android:textSize="14sp"/>
                     <TextView android:text=" AH"/>
                 </TableRow>
 
                 <TableRow >
-                    <TextView android:text="累计电量：" android:textSize="16sp"/>
+                    <TextView android:text="@string/AccumulatedPower" android:textSize="14sp"/>
                     <TextView android:id="@+id/tvWalt"
-                        android:text="4.7" android:textSize="16sp"/>
+                        android:text="4.7" android:textSize="14sp"/>
                     <TextView android:text=" 度"/>
                 </TableRow>
 
@@ -109,44 +143,45 @@
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:layout_marginLeft="0dp"
+                android:layout_marginLeft="1dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:layout_marginRight="10dp">
+                android:layout_marginRight="5dp">
                 <TableRow >
-                    <TextView android:text="二氧化碳：" android:textSize="16sp"/>
-                    <TextView android:text="4.7" android:textSize="16sp" android:id="@+id/tvCO2"/>
+                    <TextView android:text="@string/carbondioxide" android:textSize="14sp"/>
+                    <TextView android:text="4.7" android:textSize="14sp" android:id="@+id/tvCO2"/>
                     <TextView android:text=" Kg"/>
                     <TextView android:layout_width="50dp"/>
                 </TableRow>
 
                 <TableRow >
-                    <TextView android:text="累计电费：" android:textSize="16sp"/>
-                    <TextView android:text="4.7" android:textSize="16sp" android:id="@+id/tvPowerRate"/>
+                    <TextView android:text="@string/accumulatedElectricityBill"
+                        android:textSize="14sp"/>
+                    <TextView android:text="4.7" android:textSize="14sp" android:id="@+id/tvPowerRate"/>
                     <TextView android:text=" 元"/>
                 </TableRow>
 
                 <TableRow >
-                    <TextView android:text="百  分  比：" android:textSize="16sp"/>
-                    <TextView android:text="4.7" android:textSize="16sp" android:id="@+id/tvCapacityPer"/>
+                    <TextView android:text="@string/percentage" android:textSize="14sp"/>
+                    <TextView android:text="4.7" android:textSize="14sp" android:id="@+id/tvCapacityPer"/>
                     <TextView android:text=" %"/>
                 </TableRow>
 
                 <TableRow >
-                    <TextView android:text="机内温度：" android:textSize="16sp"/>
-                    <TextView android:text="4.7" android:textSize="16sp" android:id="@+id/tvTempIn"/>
+                    <TextView android:text="@string/temperature" android:textSize="14sp"/>
+                    <TextView android:text="4.7" android:textSize="14sp" android:id="@+id/tvTempIn"/>
                     <TextView android:text=" ℃"/>
                 </TableRow>
 
                 <TableRow >
-                    <TextView android:text="计         时：" android:textSize="16sp"/>
+                    <TextView android:text="@string/reckonByTime" android:textSize="14sp"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_span="3"
                         android:text="000:12:22"
                         android:id="@+id/tvRunTime"
-                        android:textSize="16sp" />
+                        android:textSize="14sp" />
                     />
                 </TableRow>
 
@@ -154,26 +189,28 @@
 
         </LinearLayout>
 
-        <LinearLayout android:paddingTop="10dp"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="210dp"
-            android:layout_marginTop="-2dp"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:background="@drawable/border_background">
-
-            <LinearLayout android:layout_marginLeft="5dp"
+            >
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
-                <LinearLayout android:orientation="horizontal"
+                <LinearLayout android:paddingBottom="10dp"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <LinearLayout
-                        android:layout_width="1dp"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:paddingTop="10dp"
+                    android:paddingRight="10dp"
+                    android:background="@drawable/border_background"
+                    android:orientation="vertical">
+                    <LinearLayout android:layout_margin="1dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:orientation="horizontal">
-                        <TextView android:text="电价 (元):"
+                        <TextView android:text="@string/electricityPrice"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"/>
                         <EditText
@@ -186,21 +223,20 @@
                             android:padding="2dp"
                             android:singleLine="true"
                             android:layout_width="60dp"/>
-                        <Button android:text="设置"
+                        <Button android:text="@string/setting"
                             android:id="@+id/btnPrice"
                             android:background="@drawable/button_color"
                             android:layout_height="30dp"
-                            android:layout_width="40dp"
-                            android:padding="0dp"
-                            android:textSize="14dp"
+                            android:layout_width="50dp"
+                            android:layout_marginLeft="2dp"
+                            android:textSize="14sp"
                             />
                     </LinearLayout>
-                    <LinearLayout
-                        android:layout_width="1dp"
-                        android:layout_weight="1"
+                    <LinearLayout android:layout_margin="1dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
-                        <TextView android:text="背 光 (S) :"
+                        <TextView android:text="@string/backlight"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"/>
                         <EditText
@@ -215,32 +251,23 @@
                             android:layout_width="60dp"/>
                         <Button
                             android:id="@+id/btnBack"
-                            android:text="设置"
+                            android:text="@string/setting"
                             android:background="@drawable/button_color"
                             android:layout_height="30dp"
-                            android:layout_width="40dp"
-                            android:padding="0dp"
-                            android:textSize="14dp"
+                            android:layout_width="50dp"
+                            android:layout_marginLeft="2dp"
+                            android:textSize="14sp"
                             />
-
-
-
                     </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout android:orientation="horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <LinearLayout android:layout_marginTop="5dp"
-                        android:layout_width="1dp"
+                    <LinearLayout android:layout_margin="1dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:orientation="horizontal">
-                        <TextView android:text="零容电压:"
+                        <TextView android:text="@string/temperatureWarning"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"/>
                         <EditText
-                            android:id="@+id/etZero"
+                            android:id="@+id/etTempAlarm"
                             android:inputType="numberDecimal"
                             android:layout_height="wrap_content"
                             android:background="@drawable/border_background"
@@ -249,25 +276,24 @@
                             android:padding="2dp"
                             android:singleLine="true"
                             android:layout_width="60dp"/>
-                        <Button android:text="设置"
+                        <Button android:text="@string/setting"
                             android:id="@+id/btnZeroSet"
                             android:background="@drawable/button_color"
                             android:layout_height="30dp"
-                            android:layout_width="40dp"
-                            android:padding="0dp"
-                            android:textSize="14dp"
+                            android:layout_width="50dp"
+                            android:layout_marginLeft="2dp"
+                            android:textSize="14sp"
                             />
                     </LinearLayout>
-                    <LinearLayout android:layout_marginTop="5dp"
-                        android:layout_width="1dp"
-                        android:layout_weight="1"
+                    <LinearLayout android:layout_margin="1dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-                        <TextView android:text="满容电压:"
+                        <TextView android:text="@string/capacityWarning"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"/>
                         <EditText
-                            android:id="@+id/etFull"
+                            android:id="@+id/etCapcityAlarm"
                             android:inputType="numberDecimal"
                             android:layout_height="wrap_content"
                             android:background="@drawable/border_background"
@@ -276,25 +302,20 @@
                             android:padding="2dp"
                             android:singleLine="true"
                             android:layout_width="60dp"/>
-                        <Button android:text="设置"
+                        <Button android:text="@string/setting"
                             android:id="@+id/btnFullSet"
                             android:background="@drawable/button_color"
                             android:layout_height="30dp"
-                            android:layout_width="40dp"
-                            android:padding="0dp"
-                            android:textSize="14dp"
+                            android:layout_width="50dp"
+                            android:layout_marginLeft="2dp"
+                            android:textSize="14sp"
                             />
                     </LinearLayout>
-                </LinearLayout>
-                <LinearLayout android:orientation="horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <LinearLayout android:layout_marginTop="5dp"
-                        android:layout_width="1dp"
+                    <LinearLayout android:layout_margin="1dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:orientation="horizontal">
-                        <TextView android:text="满容容量:"
+                        <TextView android:text="@string/fullCapacity"
                             android:layout_height="wrap_content"
                             android:layout_width="wrap_content"/>
                         <EditText
@@ -307,29 +328,30 @@
                             android:padding="2dp"
                             android:singleLine="true"
                             android:layout_width="60dp"/>
-                        <Button android:text="设置"
+                        <Button android:text="@string/setting"
                             android:id="@+id/btnFullCapacitySet"
                             android:background="@drawable/button_color"
                             android:layout_height="30dp"
-                            android:layout_width="40dp"
-                            android:padding="0dp"
-                            android:textSize="14dp"
+                            android:layout_width="50dp"
+                            android:layout_marginLeft="2dp"
+                            android:textSize="14sp"
                             />
                     </LinearLayout>
 
                 </LinearLayout>
 
                 <LinearLayout android:layout_marginTop="10dp"
+                    android:layout_marginLeft="5dp"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:orientation="horizontal"
                     >
                     <Button
                         android:id="@+id/btnClearWalt"
-                        android:text="电量清零"
+                        android:text="@string/zeroBattery"
                         android:background="@drawable/button_color"
                         android:layout_height="35dp"
-                        android:layout_width="wrap_content"
+                        android:layout_width="1dp"
                         android:padding="0dp"
                         android:layout_gravity="center"
                         android:textSize="14dp"
@@ -339,10 +361,10 @@
 
                     <Button
                             android:id="@+id/btnClearPrice"
-                            android:text="电费清零"
+                            android:text="@string/zeroElectricityBills"
                             android:background="@drawable/button_color"
                             android:layout_height="35dp"
-                            android:layout_width="wrap_content"
+                            android:layout_width="1dp"
                             android:padding="0dp"
                             android:layout_marginLeft="5dp"
                             android:layout_gravity="center"
@@ -353,10 +375,10 @@
 
                     <Button
                         android:id="@+id/btnClearCO2"
-                        android:text="二氧化碳清零"
+                        android:text="@string/zerocarbondioxide"
                         android:background="@drawable/button_color"
                         android:layout_height="35dp"
-                        android:layout_width="wrap_content"
+                        android:layout_width="1dp"
                         android:padding="0dp"
                         android:layout_marginLeft="5dp"
                         android:layout_gravity="center"
@@ -367,10 +389,10 @@
 
                     <Button
                         android:id="@+id/btnClearTime"
-                        android:text="时间清零"
+                        android:text="@string/zeroTime"
                         android:background="@drawable/button_color"
                         android:layout_height="35dp"
-                        android:layout_width="wrap_content"
+                        android:layout_width="1dp"
                         android:padding="0dp"
                         android:layout_marginLeft="5dp"
                         android:layout_marginRight="5dp"
@@ -383,20 +405,20 @@
                 </LinearLayout>
 
                 <LinearLayout android:layout_marginTop="10dp"
+                    android:layout_marginLeft="5dp"
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:orientation="horizontal"
-                    android:layout_gravity="center">
+                   >
                     <Button
                         android:id="@+id/btnSet"
-                        android:text="设    置"
+                        android:text="@string/setup"
                         android:background="@drawable/button_color"
                         android:layout_height="35dp"
-                        android:layout_width="wrap_content"
+                        android:layout_width="1dp"
                         android:padding="0dp"
                         android:layout_gravity="center"
                         android:textSize="14dp"
-                        android:layout_span="3"
                         android:layout_weight="1"
                         />
 
@@ -405,7 +427,7 @@
                         android:text="-"
                         android:background="@drawable/button_color"
                         android:layout_height="35dp"
-                        android:layout_width="wrap_content"
+                        android:layout_width="1dp"
                         android:padding="0dp"
                         android:layout_marginLeft="5dp"
                         android:layout_gravity="center"
@@ -419,7 +441,7 @@
                         android:text="+"
                         android:background="@drawable/button_color"
                         android:layout_height="35dp"
-                        android:layout_width="wrap_content"
+                        android:layout_width="1dp"
                         android:padding="0dp"
                         android:layout_marginLeft="5dp"
                         android:layout_gravity="center"
@@ -430,10 +452,10 @@
 
                     <Button
                         android:id="@+id/btnConfirm"
-                        android:text="确  定"
+                        android:text="@string/determine"
                         android:background="@drawable/button_color"
                         android:layout_height="35dp"
-                        android:layout_width="wrap_content"
+                        android:layout_width="1dp"
                         android:padding="0dp"
                         android:layout_marginLeft="5dp"
                         android:layout_marginRight="5dp"

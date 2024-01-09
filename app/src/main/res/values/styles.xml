@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme.BlueSky" parent="Theme.AppCompat.Light">
+        <!-- Customize your theme here -->
+        <item name="colorPrimary">#2196F3</item> <!-- 更改工具栏颜色 -->
+        <item name="colorPrimaryDark">#1976D2</item> <!-- 更改状态栏颜色 -->
+        <item name="colorAccent">#FF4081</item> <!-- 更改强调颜色 -->
+        <item name="windowActionBar">false</item> <!-- 禁用系统提供的 Action Bar -->
+        <item name="windowNoTitle">true</item> <!-- 不显示标题 -->
+        <!-- 其他主题属性 -->
+    </style>
+</resources>

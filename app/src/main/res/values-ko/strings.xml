@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">전력계</string>
+    <string name="connect">연결</string>
+    <string name="disconnect">연결 해제</string>
+    <string name="bluetooth_status">현재 연결된 장치:</string>
+    <string name="voltage">전      압:</string>
+    <string name="current">전      流:</string>
+    <string name="carbondioxide">이산화탄소:</string>
+    <string name="accumulatedElectricityBill">누적 전기 요금:</string>
+    <string name="power">파      원:</string>
+    <string name="percentage">백  퍼  센트:</string>
+    <string name="AccumulatedCapacity">누적 용량:</string>
+    <string name="temperature">기계 내 온도:</string>
+    <string name="AccumulatedPower">누적 전력량:</string>
+    <string name="reckonByTime">계         시:</string>
+    <string name="electricityPrice">전기 요금 (원):</string>
+    <string name="backlight">백 라이트 (초):</string>
+    <string name="temperatureWarning">온도 경고:</string>
+    <string name="capacityWarning">용량 경고:</string>
+    <string name="fullCapacity">최대 용량:</string>
+    <string name="zeroBattery">배터리 초기화</string>
+    <string name="zeroElectricityBills">전기 요금 초기화</string>
+    <string name="zerocarbondioxide">이산화탄소 초기화</string>
+    <string name="zeroTime">시간 초기화</string>
+    <string name="setup">설    정</string>
+    <string name="setting">설정</string>
+    <string name="determine">확  인</string>
+    <string name="Charging">충전 중</string>
+    <string name="Discharging">방전 중</string>
+
+    <string name="Chinese">중국어</string>
+    <string name="English">영어</string>
+    <string name="Japanese">일본어</string>
+    <string name="Korean">한국어</string>
+    <string name="language">언어</string>
+</resources>

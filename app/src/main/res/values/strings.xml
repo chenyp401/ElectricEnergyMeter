@@ -1,6 +1,38 @@
 <resources>
-    <string name="app_name">电能表</string>
-    <string name="connect">连接</string>
-    <string name="disconnect">断开</string>
-    <string name="bluetooth_status">当前连接设备：</string>
+    <string name="app_name">battery monitor</string>
+    <string name="connect">connect</string>
+    <string name="disconnect">disconnect</string>
+    <string name="bluetooth_status">currently connected device:</string>
+    <string name="voltage">voltage:</string>
+    <string name="current">current:</string>
+    <string name="carbondioxide">CO₂:</string>
+    <string name="accumulatedElectricityBill">Electricity bill:</string>
+    <string name="power">power:</string>
+    <string name="percentage">percentage:</string>
+    <string name="AccumulatedCapacity">Total Capacity:</string>
+    <string name="temperature">temperature:</string>
+    <string name="AccumulatedPower">total Electricity:</string>
+    <string name="reckonByTime">timing：</string>
+    <string name="electricityPrice">electricity Price:</string>
+    <string name="backlight">backlight：</string>
+    <string name="temperatureWarning">temperature Warning:</string>
+    <string name="capacityWarning">capacity Warning：</string>
+    <string name="fullCapacity">full Capacity:</string>
+    <string name="zeroBattery">Zero electricity</string>
+    <string name="zeroElectricityBills">zero Bills</string>
+    <string name="zerocarbondioxide">Zero CO₂</string>
+    <string name="zeroTime">zero Time</string>
+    <string name="setup">setup</string>
+    <string name="setting">setup</string>
+    <string name="determine">Confirm</string>
+    <string name="Charging">Charging</string>
+    <string name="Discharging">Discharging</string>
+
+
+    <string name="Chinese">Chinese</string>
+    <string name="English">English</string>
+    <string name="Japanese">Japanese</string>
+    <string name="Korean">Korean</string>
+    <string name="language">language</string>
+
 </resources>
