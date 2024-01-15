@@ -8,13 +8,13 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-//import android.app.NotificationChannel;
-//import android.app.NotificationManager;
-//import android.app.PendingIntent;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattService;
-//import android.content.Context;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -24,7 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-//import android.provider.Settings;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -39,8 +39,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-//import androidx.core.app.NotificationCompat;
-//import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.primitives.Bytes;
@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String UUID_NOTIFY = "0000ffe1-0000-1000-8000-00805f9b34fb";
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int REQUEST_CODE_SYSTEM_ALERT_WINDOW = 2;
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
     String[] permissions = new String[]{
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
@@ -88,12 +89,14 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.BLUETOOTH_ADVERTISE,
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.ACCESS_FINE_LOCATION,
-//            Manifest.permission.SYSTEM_ALERT_WINDOW,
+            Manifest.permission.SYSTEM_ALERT_WINDOW,
+            Manifest.permission.VIBRATE,
+            Manifest.permission.USE_FULL_SCREEN_INTENT,
 
     };
     boolean isTempAlarm = false;
     boolean isCapcityAlarm = false;
-//    NotificationChannel channel;
+    NotificationChannel channel;
     double curCapacity = -1;
     String address = null;
     String name = null;
@@ -455,15 +458,27 @@ public class MainActivity extends AppCompatActivity {
                     0);
         }
 
-//        // 检查权限是否已经被授予
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-//            // 如果没有授权，跳转到权限设置界面
-//            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-//            startActivityForResult(intent, REQUEST_CODE_SYSTEM_ALERT_WINDOW);
-//        } else {
-//            // 权限已经被授予，执行相应操作
-//            // 在这里执行后台弹窗的代码
-//        }
+        // 检查权限是否已经被授予
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            // 如果没有授权，跳转到权限设置界面
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+            startActivityForResult(intent, REQUEST_CODE_SYSTEM_ALERT_WINDOW);
+        } else {
+            // 权限已经被授予，执行相应操作
+            // 在这里执行后台弹窗的代码
+        }
+
+
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        // 检查通知权限是否已经授予
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (!notificationManager.areNotificationsEnabled()) {
+                // 请求通知权限
+                Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                startActivityForResult(intent, NOTIFICATION_PERMISSION_REQUEST_CODE);
+            }
+        }
 
 
         //////////////////////////spp蓝牙/////////////////////////////////////////////////////////////
@@ -613,10 +628,12 @@ public class MainActivity extends AppCompatActivity {
 
         tm = new Timer();
         tm.schedule(new TimerTask() {
+            int count=0;
             @Override
             public void run() {
 
                 runOnUiThread(new Runnable() {
+
                     @Override
                     public void run() {
 //                        if (bt.getServiceState()==BluetoothState.STATE_CONNECTED)
@@ -635,6 +652,13 @@ public class MainActivity extends AppCompatActivity {
                             DecimalFormat df = new DecimalFormat("00");
                             tvRunTime.setText(df.format(hours - days * 24) + ":" + df.format(minutes - hours * 60) + ":" + df.format(seconds - minutes * 60));
 
+                            if (count%60==0)
+                            {
+                                isTempAlarm=false;
+                                isCapcityAlarm=false;
+                                count=1;
+                            }
+                            count++;
                         }
                     }
                 });
@@ -909,7 +933,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onNotify(UUID service, UUID character, byte[] vals)
                 {
-                    Toast.makeText(getApplicationContext(), CHexConver.byte2HexStr(vals,vals.length),Toast.LENGTH_LONG).show();
+//                    Toast.makeText(getApplicationContext(), CHexConver.byte2HexStr(vals,vals.length),Toast.LENGTH_SHORT).show();
                     DecimalFormat df = new DecimalFormat("0");
                     DecimalFormat df1 = new DecimalFormat("0.0");
                     DecimalFormat df2 = new DecimalFormat("0.00");
@@ -963,8 +987,8 @@ public class MainActivity extends AppCompatActivity {
                                     {
                                         tvChargeStatus.setText("");
                                     }
-                                    curCapacity=totalCapacity;
 
+                                    curCapacity=totalCapacity;
                                     tvVoltage.setText(df1.format(voltage));
                                     tvCurrent.setText(df3.format(current));
                                     tvPower.setText(df1.format(power));
@@ -1012,47 +1036,47 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                     }
 
-                                    //报警通知
+//                                    报警通知
 
-//                                    if (isTempAlarm==false && tempAlarm<tempIn )
-//                                    {
-//                                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-//                                        intent.putExtra("notificationId", (int) 1); // 在 Intent 中添加额外的数据，比如通知 ID
-//                                        intent.putExtra("isTempAlarm", true);
-//                                        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-//                                        createNotificationChannel(MainActivity.this);
-//
-//                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, notifyChannelId)
-//                                                .setSmallIcon(R.drawable.alarm)
-//                                                .setContentTitle("温度报警")
-//                                                .setContentText("当前温度："+tempIn+"℃")
-//                                                .setContentIntent(pendingIntent)
-//                                                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-//
-//                                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-//                                        notificationManager.notify((int) 1, builder.build());
-//                                        isTempAlarm=true;
-//                                    }
-//
-//                                    if (isCapcityAlarm==false && totalCapacity<capacityAlarm)
-//                                    {
-//                                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-//                                        intent.putExtra("notificationId", (int) 2); // 在 Intent 中添加额外的数据，比如通知 ID
-//                                        intent.putExtra("isCapacityAlarm", true);
-//                                        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-//                                        createNotificationChannel(MainActivity.this);
-//
-//                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, notifyChannelId)
-//                                                .setSmallIcon(R.drawable.alarm)
-//                                                .setContentTitle("容量报警")
-//                                                .setContentText("当前容量："+totalCapacity +"AH")
-//                                                .setContentIntent(pendingIntent)
-//                                                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-//
-//                                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-//                                        notificationManager.notify((int) 2, builder.build());
-//                                        isCapcityAlarm=true;
-//                                    }
+                                    if (isTempAlarm==false && tempAlarm<tempIn )
+                                    {
+                                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                        intent.putExtra("notificationId", (int) 1); // 在 Intent 中添加额外的数据，比如通知 ID
+                                        intent.putExtra("isTempAlarm", true);
+                                        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE);
+                                        createNotificationChannel(MainActivity.this);
+
+                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, notifyChannelId)
+                                                .setSmallIcon(R.drawable.alarm)
+                                                .setContentTitle("温度报警")
+                                                .setContentText("当前温度："+tempIn+"℃")
+                                                .setContentIntent(pendingIntent)
+                                                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                                        notificationManager.notify((int) 1, builder.build());
+                                        isTempAlarm=true;
+                                    }
+
+                                    if (isCapcityAlarm==false && totalCapacity<capacityAlarm)
+                                    {
+                                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                        intent.putExtra("notificationId", (int) 2); // 在 Intent 中添加额外的数据，比如通知 ID
+                                        intent.putExtra("isCapacityAlarm", true);
+                                        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_MUTABLE);
+                                        createNotificationChannel(MainActivity.this);
+
+                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, notifyChannelId)
+                                                .setSmallIcon(R.drawable.alarm)
+                                                .setContentTitle("容量报警")
+                                                .setContentText("当前容量："+totalCapacity +"AH")
+                                                .setContentIntent(pendingIntent)
+                                                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+                                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                                        notificationManager.notify((int) 2, builder.build());
+                                        isCapcityAlarm=true;
+                                    }
                                 }
                             });
                             lst.clear();
@@ -1170,41 +1194,41 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-//    private void createNotificationChannel(Context context) {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            CharSequence name = notifyChannelId;
-//            String description = notifyChannelId;
-//            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-//            NotificationChannel channel = new NotificationChannel(notifyChannelId, name, importance);
-//            channel.setDescription(description);
-//
-//            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-//            notificationManager.createNotificationChannel(channel);
-//        }
-//    }
+    private void createNotificationChannel(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = notifyChannelId;
+            String description = notifyChannelId;
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(notifyChannelId, name, importance);
+            channel.setDescription(description);
 
-//    @Override
-//    protected void  onResume()
-//    {
-//        super.onResume();
-//        // 检查是否是由通知触发的
-//        if (getIntent().getExtras() != null && getIntent().hasExtra("notificationId")) {
-//            // 处理通知点击事件
-//            int notificationId = getIntent().getIntExtra("notificationId", 0);
-//            boolean btmp = (boolean) getIntent().getBooleanExtra("notificationId", false);
-//            boolean bcapa = (boolean) getIntent().getBooleanExtra("isTempAlarm", false);
-//            // 根据通知ID执行相应操作
-//            // 例如，跳转到特定页面或执行其他逻辑
-//            if (notificationId==1)
-//            {
-//               if(btmp) isTempAlarm=false;
-//
-//            }
-//            if(notificationId==2)
-//            {
-//                if(bcapa) isCapcityAlarm=false;
-//            }
-//
-//        }
-//    }
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    @Override
+    protected void  onResume()
+    {
+        super.onResume();
+        // 检查是否是由通知触发的
+        if (getIntent().getExtras() != null && getIntent().hasExtra("notificationId")) {
+            // 处理通知点击事件
+            int notificationId = getIntent().getIntExtra("notificationId", 0);
+            boolean btmp = (boolean) getIntent().getBooleanExtra("notificationId", false);
+            boolean bcapa = (boolean) getIntent().getBooleanExtra("isTempAlarm", false);
+            // 根据通知ID执行相应操作
+            // 例如，跳转到特定页面或执行其他逻辑
+            if (notificationId==1)
+            {
+               if(btmp) isTempAlarm=false;
+
+            }
+            if(notificationId==2)
+            {
+                if(bcapa) isCapcityAlarm=false;
+            }
+
+        }
+    }
 }
