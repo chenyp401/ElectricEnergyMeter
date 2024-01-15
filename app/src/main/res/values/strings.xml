@@ -27,12 +27,13 @@
     <string name="determine">Confirm</string>
     <string name="Charging">Charging</string>
     <string name="Discharging">Discharging</string>
+    
+    <string name="money" > Yuan</string>
 
-
-    <string name="Chinese">Chinese</string>
+    <string name="Chinese">中文</string>
     <string name="English">English</string>
-    <string name="Japanese">Japanese</string>
-    <string name="Korean">Korean</string>
+    <string name="Japanese">日本語</string>
+    <string name="Korean">한국어</string>
     <string name="language">language</string>
 
 </resources>

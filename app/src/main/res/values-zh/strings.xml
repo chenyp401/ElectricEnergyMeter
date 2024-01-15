@@ -28,9 +28,11 @@
     <string name="Charging">充电中</string>
     <string name="Discharging">放电中</string>
 
+    <string name="money" > 元</string>
+
     <string name="Chinese">中文</string>
-    <string name="English">英语</string>
-    <string name="Japanese">日语</string>
-    <string name="Korean">韩语</string>
+    <string name="English">English</string>
+    <string name="Japanese">日本語</string>
+    <string name="Korean">한국어</string>
     <string name="language">语言</string>
 </resources>

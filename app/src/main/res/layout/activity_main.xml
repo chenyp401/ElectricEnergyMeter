@@ -133,7 +133,7 @@
                     <TextView android:text="@string/AccumulatedPower" android:textSize="14sp"/>
                     <TextView android:id="@+id/tvWalt"
                         android:text="4.7" android:textSize="14sp"/>
-                    <TextView android:text=" 度"/>
+                    <TextView android:text="KWH" android:textSize="12sp"/>
                 </TableRow>
 
             </TableLayout>
@@ -158,7 +158,8 @@
                     <TextView android:text="@string/accumulatedElectricityBill"
                         android:textSize="14sp"/>
                     <TextView android:text="4.7" android:textSize="14sp" android:id="@+id/tvPowerRate"/>
-                    <TextView android:text=" 元"/>
+<!--                    <TextView android:text=" 元"/>-->
+                    <TextView android:text="@string/money"/>
                 </TableRow>
 
                 <TableRow >
