@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
         myToolbar = (Toolbar) findViewById(R.id.toolBar);
         setSupportActionBar(myToolbar);
         btStatus = (TextView) findViewById(R.id.tvStatus);
-        btStatus.setText(getString(R.string.bluetooth_status) + "无");
+        btStatus.setText(getString(R.string.bluetooth_status) + getString(R.string.noDevice));
 
         //电池控件
         battery = (BatteryView) findViewById(R.id.batter);
@@ -1170,7 +1170,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext()
                         , "连接断开！"
                         , Toast.LENGTH_SHORT).show();
-                btStatus.setText(getString(R.string.bluetooth_status) +"无");
+                btStatus.setText(getString(R.string.bluetooth_status) +getString(R.string.noDevice));
                 mClient.connect(mac,options,bleConnectResponse);
 //                mClient.unregisterConnectStatusListener(mac, mBleConnectStatusListener);
             }

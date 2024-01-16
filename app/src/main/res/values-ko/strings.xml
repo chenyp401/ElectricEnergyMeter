@@ -35,4 +35,6 @@
     <string name="Japanese">日本語</string>
     <string name="Korean">한국어</string>
     <string name="language">언어</string>
+
+    <string name="noDevice" >장치 없음</string>
 </resources>

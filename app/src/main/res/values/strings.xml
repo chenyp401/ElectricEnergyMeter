@@ -36,4 +36,6 @@
     <string name="Korean">한국어</string>
     <string name="language">language</string>
 
+    <string name="noDevice" >no device</string>
+
 </resources>
