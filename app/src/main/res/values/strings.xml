@@ -6,10 +6,10 @@
     <string name="voltage">voltage:</string>
     <string name="current">current:</string>
     <string name="carbondioxide">CO₂:</string>
-    <string name="accumulatedElectricityBill">electricity bill:</string>
+    <string name="accumulatedElectricityBill">Electricity bill:</string>
     <string name="power">power:</string>
     <string name="percentage">percentage:</string>
-    <string name="AccumulatedCapacity">total Capacity:</string>
+    <string name="AccumulatedCapacity">Total Capacity:</string>
     <string name="temperature">temperature:</string>
     <string name="AccumulatedPower">total Electricity:</string>
     <string name="reckonByTime">timing：</string>
@@ -18,17 +18,17 @@
     <string name="temperatureWarning">temperature Warning:</string>
     <string name="capacityWarning">capacity Warning：</string>
     <string name="fullCapacity">full Capacity:</string>
-    <string name="zeroBattery">zero electricity</string>
+    <string name="zeroBattery">Zero electricity</string>
     <string name="zeroElectricityBills">zero Bills</string>
-    <string name="zerocarbondioxide">zero CO₂</string>
+    <string name="zerocarbondioxide">Zero CO₂</string>
     <string name="zeroTime">zero Time</string>
     <string name="setup">setup</string>
     <string name="setting">setup</string>
-    <string name="determine">confirm</string>
-    <string name="Charging">charging</string>
-    <string name="Discharging">discharging</string>
-    
-    <string name="money" > usd</string>
+    <string name="determine">Confirm</string>
+    <string name="Charging">Charging</string>
+    <string name="Discharging">Discharging</string>
+
+    <string name="money"> Yuan</string>
 
     <string name="Chinese">中文</string>
     <string name="English">English</string>
@@ -36,6 +36,6 @@
     <string name="Korean">한국어</string>
     <string name="language">language</string>
 
-    <string name="noDevice" >no device</string>
+    <string name="noDevice">no device</string>
 
 </resources>
