@@ -20,15 +20,15 @@ public class Authorize {
     }
 
     // 根据设备 ID 生成授权码
-    public String generateAuthorizationCode() {
-        String deviceId = getDeviceId();
+    public String generateAuthorizationCode(String deviceId) {
+
         // 使用哈希算法生成授权码
         return sha256(deviceId);
     }
 
     // 检查授权码是否有效
-    public boolean isAuthorized(String authorizationCode) {
-        String generatedCode = generateAuthorizationCode();
+    public boolean isAuthorized(String deviceId,String authorizationCode) {
+        String generatedCode = generateAuthorizationCode(deviceId);
         return generatedCode != null && generatedCode.equals(authorizationCode);
     }
 

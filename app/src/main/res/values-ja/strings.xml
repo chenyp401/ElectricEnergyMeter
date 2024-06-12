@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">電力メーター</string>
+    <string name="app_name">以瑞监测</string>
     <string name="connect">接続</string>
     <string name="disconnect">切断</string>
     <string name="bluetooth_status">現在の接続デバイス：</string>

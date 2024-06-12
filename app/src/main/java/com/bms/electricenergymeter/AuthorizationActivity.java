@@ -49,11 +49,27 @@ public class AuthorizationActivity extends DialogFragment {
         btnAuthroize.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String code=etCode.getText().toString().trim();
-                if (authorize.isAuthorized(code))
+                String strId=etDeviceId.getText().toString().trim();
+                String authorCode=etCode.getText().toString().trim();
+                if (authorize.isAuthorized(strId,authorCode))
                 {
                     isAuthorize=true;
                     authorize.saveAuthorizationStatus(true);
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                    builder.setTitle("消息");
+                    builder.setMessage("授权成功！");
+                    builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // 处理"是"按钮点击事件
+                            dialog.dismiss();
+                            dismiss();
+                        }
+                    });
+
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
 
                 }
                 else
@@ -84,6 +100,13 @@ public class AuthorizationActivity extends DialogFragment {
                     dialog.show();
 
                 }
+            }
+        });
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finishAffinity(getActivity()); // 结束当前Activity以及所有父Activity，适用于API 16及以上版本
+                System.exit(0); // 如果你需要立即终止进程
             }
         });
         return view;

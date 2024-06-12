@@ -851,7 +851,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         Authorize authorize=new Authorize(this);
-        authorize.saveAuthorizationStatus(false);
+        //authorize.saveAuthorizationStatus(false);
         if (!authorize.readAuthorizationStatus())
         {
             AuthorizationActivity authorizationActivity = new AuthorizationActivity();
