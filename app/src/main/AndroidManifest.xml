@@ -24,7 +24,7 @@
         android:theme="@style/AppTheme.BlueSky"
         tools:targetApi="31">
         <activity
-            android:name=".Authorization"
+            android:name=".AuthorizationActivity"
             android:exported="false" />
         <activity
             android:name=".SplashActivity"

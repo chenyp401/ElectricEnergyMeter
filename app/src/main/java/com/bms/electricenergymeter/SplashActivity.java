@@ -16,7 +16,6 @@ public class SplashActivity  extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
 
-
         new Handler().postDelayed(() -> {
             // 在延迟后跳转到主界面
             Intent intent = new Intent(SplashActivity.this, MainActivity.class);

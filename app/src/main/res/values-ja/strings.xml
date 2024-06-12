@@ -37,4 +37,8 @@
     <string name="language">言語</string>
 
     <string name="noDevice" >デバイスなし</string>
+
+    <string name="authorize">認証</string>
+    <string name="authorizeCode">認証コード:</string>
+    <string name="cancel">キャンセル</string>
 </resources>

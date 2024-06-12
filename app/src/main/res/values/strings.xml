@@ -38,4 +38,8 @@
 
     <string name="noDevice">no device</string>
 
+    <string name="authorize">authorize</string>
+    <string name="authorizeCode">authorizeCode</string>
+    <string name="cancel">cancel</string>
+
 </resources>

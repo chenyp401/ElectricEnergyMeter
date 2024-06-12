@@ -37,4 +37,8 @@
     <string name="language">语言</string>
 
     <string name="noDevice" >无</string>
+
+    <string name="authorize">授  权</string>
+    <string name="authorizeCode">授权码:</string>
+    <string name="cancel">取  消</string>
 </resources>

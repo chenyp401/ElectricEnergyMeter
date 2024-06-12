@@ -216,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
         btStatus = (TextView) findViewById(R.id.tvStatus);
         btStatus.setText(getString(R.string.bluetooth_status) + getString(R.string.noDevice));
 
+
         //电池控件
         battery = (BatteryView) findViewById(R.id.batter);
         //电压控件
@@ -848,6 +849,19 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
+        super.onStart();
+        Authorize authorize=new Authorize(this);
+        authorize.saveAuthorizationStatus(false);
+        if (!authorize.readAuthorizationStatus())
+        {
+            AuthorizationActivity authorizationActivity = new AuthorizationActivity();
+            authorizationActivity.show(getSupportFragmentManager(), "authorizationActivity");
+//            if (!authorizationActivity.isAuthorize)
+//            {
+//                //finishAffinity(); // 结束当前Activity以及所有父Activity，适用于API 16及以上版本
+//                //System.exit(0); // 如果你需要立即终止进程
+//            }
+        }
 
         // 创建一个 Calendar 对象
         Calendar calendar = Calendar.getInstance();
@@ -860,40 +874,42 @@ public class MainActivity extends AppCompatActivity {
         long diff = cur.getTime() - date.getTime();
         // 获取时间差的天数
         long days = diff / (1000 * 60 * 60 * 24);
-        if (days>=30)
-        {
-            // 创建一个 AlertDialog.Builder 对象
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//        if (days>=30)
+//        {
+//            // 创建一个 AlertDialog.Builder 对象
+//            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//
+//            // 设置标题
+//            builder.setTitle("警告");
+//            // 设置消息
+//            builder.setMessage("系统故障，请联系厂商！");
+//            // 设置确定按钮
+//            builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    // 退出应用
+//                    finish();
+//                }
+//            });
+//            // 设置取消按钮
+//            builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//                    // 退出应用
+//                    finish();
+//                }
+//            });
+//            // 创建一个 AlertDialog 对象
+//            AlertDialog dialog = builder.create();
+//            // 显示对话框
+//            dialog.show();
+//
+////            Toast.makeText(this,"系统故障，请联系厂商！！",Toast.LENGTH_LONG).show();
+//
+//            return;
+//        }
 
-            // 设置标题
-            builder.setTitle("警告");
-            // 设置消息
-            builder.setMessage("系统故障，请联系厂商！");
-            // 设置确定按钮
-            builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    // 退出应用
-                    finish();
-                }
-            });
-            // 设置取消按钮
-            builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    // 退出应用
-                    finish();
-                }
-            });
-            // 创建一个 AlertDialog 对象
-            AlertDialog dialog = builder.create();
-            // 显示对话框
-            dialog.show();
-
-//            Toast.makeText(this,"系统故障，请联系厂商！！",Toast.LENGTH_LONG).show();
-
-            return;
-        }
+//////////////////////////////////////////////////////
 
 //        //使能蓝牙
 //        if(!bt.isBluetoothEnabled()) {
@@ -1154,7 +1170,7 @@ public class MainActivity extends AppCompatActivity {
                     mClient.connect(address, bleConnectResponse);
                 }
             }
-        super.onStart();
+
     }
 
     //蓝牙状态改变回调事件
